@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Подключение RFID-модуля RC522 к ESP8266</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #2980b9;
+            margin-top: 30px;
+        }
+        h3 {
+            color: #16a085;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        th, td {
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+            font-weight: 600;
+        }
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        code {
+            background-color: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #e74c3c;
+        }
+        pre {
+            background-color: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        pre code {
+            background: none;
+            color: inherit;
+            padding: 0;
+        }
+        ul {
+            padding-left: 20px;
+        }
+        li {
+            margin: 8px 0;
+        }
+        .note {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+        .warning {
+            background-color: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+        a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .video-section {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 25px 0;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <article>
+        <header>
+            <h1>Подключение RFID-модуля RC522 к ESP8266</h1>
+        </header>
+
+        <p><strong>RFID-модуль RC522</strong> — это популярное и доступное решение для чтения и записи RFID-меток и карт, работающих на частоте <strong>13.56 МГц</strong>. В сочетании с микроконтроллером ESP8266, обладающим поддержкой Wi-Fi, вы можете создавать проекты, такие как системы контроля доступа, умные замки или системы учета. В этой статье мы подробно рассмотрим, как подключить RFID-модуль RC522 к ESP8266, настроить программное обеспечение и написать базовый код для чтения идентификаторов RFID-меток.</p>
+
+        <h2>Что вам понадобится</h2>
+        <p>Для выполнения этого проекта вам потребуются следующие компоненты:</p>
+        <ul>
+            <li>Микроконтроллер ESP8266 (например, NodeMCU или Wemos D1 Mini).</li>
+            <li>RFID-модуль RC522 с поддержкой интерфейса SPI.</li>
+            <li>RFID-метки или карты (обычно поставляются вместе с модулем RC522).</li>
+            <li>Соединительные провода.</li>
+            <li>Макетная плата (для удобства прототипирования).</li>
+            <li>Компьютер с установленной средой разработки Arduino IDE.</li>
+            <li>USB-кабель для подключения ESP8266 к компьютеру.</li>
+        </ul>
+
+        <h2>Подключение RC522 к ESP8266</h2>
+        <p>RFID-модуль RC522 использует интерфейс SPI для связи с микроконтроллером. Ниже приведена таблица с распиновкой для подключения RC522 к ESP8266 (на примере NodeMCU):</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Пин RC522</th>
+                    <th>Пин ESP8266 (NodeMCU)</th>
+                    <th>Описание</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>SDA</strong></td>
+                    <td>D8 (GPIO15)</td>
+                    <td>Chip Select (SS)</td>
+                </tr>
+                <tr>
+                    <td><strong>SCK</strong></td>
+                    <td>D5 (GPIO14)</td>
+                    <td>Serial Clock</td>
+                </tr>
+                <tr>
+                    <td><strong>MOSI</strong></td>
+                    <td>D7 (GPIO13)</td>
+                    <td>Master Out Slave In</td>
+                </tr>
+                <tr>
+                    <td><strong>MISO</strong></td>
+                    <td>D6 (GPIO12)</td>
+                    <td>Master In Slave Out</td>
+                </tr>
+                <tr>
+                    <td><strong>IRQ</strong></td>
+                    <td>Не подключается</td>
+                    <td>Interrupt (не используется)</td>
+                </tr>
+                <tr>
+                    <td><strong>GND</strong></td>
+                    <td>GND</td>
+                    <td>Земля</td>
+                </tr>
+                <tr>
+                    <td><strong>RST</strong></td>
+                    <td>D3 (GPIO0)</td>
+                    <td>Reset</td>
+                </tr>
+                <tr>
+                    <td><strong>3.3V</strong></td>
+                    <td>3V3</td>
+                    <td>Питание 3.3 В</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Схема подключения</h3>
+        <ol>
+            <li>Подключите <strong>SDA</strong> (SS) модуля RC522 к пину <strong>D8</strong> (GPIO15) на ESP8266.</li>
+            <li>Подключите <strong>SCK</strong> к пину <strong>D5</strong> (GPIO14).</li>
+            <li>Подключите <strong>MOSI</strong> к пину <strong>D7</strong> (GPIO13).</li>
+            <li>Подключите <strong>MISO</strong> к пину <strong>D6</strong> (GPIO12).</li>
+            <li>Подключите <strong>RST</strong> к пину <strong>D3</strong> (GPIO0).</li>
+            <li>Подключите <strong>GND</strong> модуля к <strong>GND</strong> на ESP8266.</li>
+            <li>Подключите <strong>3.3V</strong> модуля к пину <strong>3V3</strong> на ESP8266.</li>
+            <li>Пин <strong>IRQ</strong> оставьте неподключенным, так как он не используется в данном примере.</li>
+        </ol>
+
+        <div class="warning">
+            <strong>Примечание:</strong> RC522 работает от напряжения 3.3 В. Подключение к 5 В может повредить модуль, поэтому используйте только 3.3 В с ESP8266.
+        </div>
+
+        <h2>Настройка Arduino IDE</h2>
+        <p>Для работы с RC522 нам понадобится библиотека <code>MFRC522</code>. Следуйте этим шагам для настройки среды:</p>
+        <ol>
+            <li><strong>Установите Arduino IDE</strong>, если она еще не установлена. Скачать можно с официального сайта.</li>
+            <li><strong>Добавьте поддержку ESP8266</strong>:
+                <ul>
+                    <li>Откройте Arduino IDE, перейдите в <strong>File &gt; Preferences</strong>.</li>
+                    <li>В поле «Additional Boards Manager URLs» добавьте:<br>
+                        <code>http://arduino.esp8266.com/stable/package_esp8266com_index.json</code>
+                    </li>
+                    <li>Перейдите в <strong>Tools &gt; Board &gt; Boards Manager</strong>, найдите «esp8266» и установите платформу.</li>
+                </ul>
+            </li>
+            <li><strong>Установите библиотеку MFRC522</strong>:
+                <ul>
+                    <li>Перейдите в <strong>Sketch &gt; Include Library &gt; Manage Libraries</strong>.</li>
+                    <li>Найдите «MFRC522» (автор: Miguel Balboa) и установите последнюю версию.</li>
+                </ul>
+            </li>
+            <li><strong>Выберите плату</strong>:
+                <ul>
+                    <li>В меню <strong>Tools &gt; Board</strong> выберите вашу плату (например, «NodeMCU 1.0 (ESP-12E Module)»).</li>
+                    <li>Укажите порт в <strong>Tools &gt; Port</strong>.</li>
+                </ul>
+            </li>
+        </ol>
+
+        <h2>Пример кода</h2>
+        <p>Ниже приведен пример кода для чтения UID (уникального идентификатора) RFID-метки с помощью RC522 и ESP8266:</p>
+
+        <pre><code>#include &lt;SPI.h&gt;
+#include &lt;MFRC522.h&gt;
+
+#define RST_PIN D3  // Пин RST
+#define SS_PIN  D8  // Пин SDA (SS)
+
+MFRC522 rfid(SS_PIN, RST_PIN);  // Создаем объект MFRC522
+
+void setup() {
+  Serial.begin(115200);  // Инициализация Serial
+  SPI.begin();           // Инициализация SPI
+  rfid.PCD_Init();       // Инициализация RC522
+  Serial.println("Приложите RFID-метку к считывателю...");
+}
+
+void loop() {
+  // Проверяем наличие новой метки
+  if (rfid.PICC_IsNewCardPresent() && rfid.PICC_ReadCardSerial()) {
+    Serial.print("UID метки: ");
+    for (byte i = 0; i &lt; rfid.uid.size; i++) {
+      Serial.print(rfid.uid.uidByte[i] &lt; 0x10 ? " 0" : " ");
+      Serial.print(rfid.uid.uidByte[i], HEX);
+    }
+    Serial.println();
+    rfid.PICC_HaltA();  // Останавливаем чтение
+  }
+  delay(100);
+}</code></pre>
+
+        <h3>Объяснение кода</h3>
+        <ol>
+            <li><strong>Библиотеки</strong>: Подключаем библиотеки <code>SPI</code> для работы с интерфейсом SPI и <code>MFRC522</code> для взаимодействия с модулем RC522.</li>
+            <li><strong>Пины</strong>: Определяем пины <code>RST_PIN</code> и <code>SS_PIN</code> для связи с RC522.</li>
+            <li><strong>Инициализация</strong>:
+                <ul>
+                    <li><code>Serial.begin(115200)</code> — запускает последовательный порт для вывода данных.</li>
+                    <li><code>SPI.begin()</code> — инициализирует SPI.</li>
+                    <li><code>rfid.PCD_Init()</code> — инициализирует модуль RC522.</li>
+                </ul>
+            </li>
+            <li><strong>Чтение метки</strong>:
+                <ul>
+                    <li><code>rfid.PICC_IsNewCardPresent()</code> проверяет наличие новой метки.</li>
+                    <li><code>rfid.PICC_ReadCardSerial()</code> считывает данные метки.</li>
+                    <li>Цикл <code>for</code> выводит UID метки в шестнадцатеричном формате.</li>
+                </ul>
+            </li>
+            <li><strong>Остановка</strong>: <code>rfid.PICC_HaltA()</code> завершает чтение текущей метки.</li>
+        </ol>
+
+        <h2>Тестирование</h2>
+        <ol>
+            <li>Загрузите код в ESP8266, подключив его к компьютеру через USB.</li>
+            <li>Откройте <strong>Serial Monitor</strong> в Arduino IDE (установите скорость 115200).</li>
+            <li>Приложите RFID-метку или карту к модулю RC522.</li>
+            <li>В Serial Monitor вы увидите UID метки, например: <code>UID метки: A1 B2 C3 D4</code>.</li>
+        </ol>
+
+        <h2>Возможные проблемы и их решения</h2>
+        <ul>
+            <li><strong>Модуль не читает метки</strong>:
+                <ul>
+                    <li>Проверьте правильность подключения проводов.</li>
+                    <li>Убедитесь, что модуль питается от 3.3 В.</li>
+                    <li>Попробуйте другую метку или карту.</li>
+                </ul>
+            </li>
+            <li><strong>Ошибки SPI</strong>:
+                <ul>
+                    <li>Убедитесь, что пины SPI (D5, D6, D7, D8) не используются другими устройствами.</li>
+                </ul>
+            </li>
+            <li><strong>ESP8266 не подключается к Arduino IDE</strong>:
+                <ul>
+                    <li>Проверьте драйверы USB (например, CH340/CH341 для NodeMCU).</li>
+                    <li>Убедитесь, что выбран правильный порт и плата.</li>
+                </ul>
+            </li>
+        </ul>
+
+        <h2>Расширение проекта</h2>
+        <p>После успешного чтения UID метки вы можете расширить проект следующими способами:</p>
+        <ul>
+            <li><strong>Передача данных по Wi-Fi</strong>: Используйте библиотеку <code>ESP8266WiFi</code> для отправки UID на сервер или в облако.</li>
+            <li><strong>Контроль доступа</strong>: Добавьте реле для управления замком, проверяя UID метки в списке разрешенных.</li>
+            <li><strong>Логирование</strong>: Сохраняйте данные о сканировании меток в базе данных или на SD-карте (с дополнительным модулем).</li>
+        </ul>
+
+        <h2>Заключение</h2>
+        <p>Подключение RFID-модуля RC522 к ESP8266 — это простой и эффективный способ создать проект с использованием RFID-технологий. С помощью приведенного кода и схемы подключения вы можете быстро начать считывать RFID-метки и интегрировать их в свои IoT-проекты. В следующих разделах руководства мы рассмотрим, как добавить Wi-Fi-функциональность и интегрировать другие датчики для создания более сложных систем.</p>
+
+        <div class="video-section">
+            <h3>📺 Видеоинструкция</h3>
+            <p><a href="https://www.youtube.com/watch?v=0yxCbzMoYLI" target="_blank">Смотреть видео на YouTube</a></p>
+        </div>
+    </article>
+
+    <footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 14px;">
+        
+    </footer>
+</body>
+</html>
