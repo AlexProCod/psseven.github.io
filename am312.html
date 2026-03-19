@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Подключение датчика движения AM312 к ESP8266</title>
+    <!-- Шрифты в техническом стиле -->
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --card-bg: #161b22;
+            --text-main: #c9d1d9;
+            --text-muted: #8b949e;
+            --accent-green: #2ea043;
+            --accent-blue: #58a6ff;
+            --accent-red: #da3633;
+            --accent-yellow: #d29922;
+            --border-color: #30363d;
+            --code-bg: #0d1117;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.7;
+            background-image: 
+                linear-gradient(rgba(13, 17, 23, 0.95), rgba(13, 17, 23, 0.95)),
+                url("image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%232ea043' fill-opacity='0.05' fill-rule='evenodd'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        /* Навигация */
+        .nav-bar {
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--accent-green);
+            font-size: 1.5rem;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .back-btn {
+            color: var(--accent-blue);
+            text-decoration: none;
+            font-family: 'Share Tech Mono', monospace;
+            border: 1px solid var(--accent-blue);
+            padding: 5px 15px;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background-color: var(--accent-blue);
+            color: #fff;
+            box-shadow: 0 0 10px rgba(88, 166, 255, 0.4);
+        }
+
+        /* Контент статьи */
+        .article-container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px 60px;
+        }
+
+        header.article-header {
+            margin-bottom: 40px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 20px;
+        }
+
+        h1 {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 2.2rem;
+            color: #fff;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        h1 span {
+            color: var(--accent-green);
+        }
+
+        .intro {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--accent-blue);
+            margin-top: 40px;
+            margin-bottom: 20px;
+            font-size: 1.6rem;
+            border-left: 4px solid var(--accent-blue);
+            padding-left: 15px;
+        }
+
+        h3 {
+            color: var(--text-main);
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        p {
+            margin-bottom: 15px;
+        }
+
+        ul, ol {
+            margin-bottom: 20px;
+            padding-left: 25px;
+        }
+
+        li {
+            margin-bottom: 10px;
+            color: var(--text-main);
+        }
+
+        strong {
+            color: #fff;
+        }
+
+        /* Таблица */
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 25px 0;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: var(--card-bg);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.95rem;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: rgba(46, 160, 67, 0.1);
+            color: var(--accent-green);
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        /* Блок кода */
+        pre {
+            background-color: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 20px;
+            overflow-x: auto;
+            margin: 25px 0;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.9rem;
+            color: #e6edf3;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        code {
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--accent-yellow);
+        }
+
+        pre code {
+            color: inherit;
+            background: none;
+            padding: 0;
+        }
+
+        /* Предупреждения */
+        .alert {
+            padding: 15px 20px;
+            border-radius: 6px;
+            margin: 25px 0;
+            border-left: 4px solid;
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        .alert-warning {
+            border-color: var(--accent-red);
+            background-color: rgba(218, 54, 51, 0.1);
+        }
+
+        .alert-info {
+            border-color: var(--accent-blue);
+            background-color: rgba(88, 166, 255, 0.1);
+        }
+
+        .alert-title {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .alert-warning .alert-title { color: var(--accent-red); }
+        .alert-info .alert-title { color: var(--accent-blue); }
+
+        /* Сравнение */
+        .comparison-box {
+            background-color: rgba(88, 166, 255, 0.05);
+            border: 1px solid var(--accent-blue);
+            border-radius: 6px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+
+        .comparison-title {
+            color: var(--accent-blue);
+            font-family: 'Share Tech Mono', monospace;
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        /* Ссылки в тексте */
+        a {
+            color: var(--accent-blue);
+            text-decoration: none;
+            border-bottom: 1px dotted var(--accent-blue);
+            transition: all 0.2s;
+        }
+
+        a:hover {
+            color: #fff;
+            border-bottom-style: solid;
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border-color);
+            margin-top: 60px;
+            font-size: 0.9rem;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 600px) {
+            h1 { font-size: 1.8rem; }
+            h2 { font-size: 1.4rem; }
+            .nav-container { flex-direction: column; gap: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Навигация -->
+    <nav class="nav-bar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">&lt;ESP8266_LAB /&gt;</a>
+            <a href="index.html" class="back-btn">← Назад к списку проектов</a>
+        </div>
+    </nav>
+
+    <!-- Основной контент -->
+    <article class="article-container">
+        <header class="article-header">
+            <h1>Подключение датчика движения <span>AM312</span> к ESP8266</h1>
+            <p class="intro">
+                Датчик движения AM312 — это компактный и энергоэффективный пироэлектрический (PIR) сенсор на основе микросхемы BISS0001. В отличие от более крупных аналогов (например, HC-SR501), он имеет малые габариты, низкое энергопотребление и идеально подходит для автономных устройств на ESP8266, работающих от батареи.
+            </p>
+        </header>
+
+        <section>
+            <h2>Почему AM312?</h2>
+            <p>Модуль AM312 часто выбирают для проектов умного дома по следующим причинам:</p>
+            <ul>
+                <li><strong>Компактность</strong>: Размер всего около 10x10 мм, легко скрыть в корпусе.</li>
+                <li><strong>Низкое потребление</strong>: Ток покоя менее 50 мкА, что критично для battery-powered устройств.</li>
+                <li><strong>Чувствительность</strong>: Обнаруживает движение человека на расстоянии до 3-5 метров (зависит от линзы).</li>
+                <li><strong>Отсутствие регулировок</strong>: Параметры времени и чувствительности уже оптимально настроены заводом (хотя есть версии с подстроечными резисторами).</li>
+            </ul>
+
+            <div class="comparison-box">
+                <span class="comparison-title">⚖️ Сравнение: AM312 vs HC-SR501</span>
+                <p><strong>HC-SR501</strong>: Большой, потребляет много тока, имеет регуляторы времени и чувствительности, требует 5В для стабильной работы.<br>
+                <strong>AM312</strong>: Крошечный, экономичный, работает от 3.3В–5В, параметры фиксированы (время ~2 сек), идеален для скрытой установки.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Что вам понадобится</h2>
+            <ul>
+                <li>Микроконтроллер ESP8266 (NodeMCU, Wemos D1 Mini).</li>
+                <li>Датчик движения AM312 (3 пина: VCC, GND, OUT).</li>
+                <li>Соединительные провода (лучше всего тонкие Dupont).</li>
+                <li>Компьютер с Arduino IDE.</li>
+                <li>USB-кабель.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Схема подключения</h2>
+            <p>Подключение датчика AM312 к ESP8266 максимально простое, так как модуль работает в логических уровнях 3.3В и 5В.</p>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Пин AM312</th>
+                            <th>Пин ESP8266</th>
+                            <th>Описание</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>VCC</strong></td>
+                            <td>3V3 (или 5V)</td>
+                            <td>Питание (рекомендуется 3.3В для совместимости логики)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>GND</strong></td>
+                            <td>GND</td>
+                            <td>Общая земля</td>
+                        </tr>
+                        <tr>
+                            <td><strong>OUT</strong></td>
+                            <td>D1 (GPIO5) или любой GPIO</td>
+                            <td>Цифровой сигнал (HIGH при движении)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Порядок подключения:</h3>
+            <ol>
+                <li>Подключите <strong>VCC</strong> датчика к пину <strong>3V3</strong> на ESP8266.</li>
+                <li>Подключите <strong>GND</strong> датчика к <strong>GND</strong> контроллера.</li>
+                <li>Подключите вывод <strong>OUT</strong> датчика к любому цифровому пину, например <strong>D1 (GPIO5)</strong>.</li>
+            </ol>
+
+            <div class="alert alert-info">
+                <span class="alert-title">💡 Совет по монтажу</span>
+                Датчик AM312 имеет плоскую форму. Для удобства подключения можно припаять к нему провода напрямую или использовать шлейф. Убедитесь, что линза Френеля (пластиковый купол) ничем не закрыта и направлена в зону контроля.
+            </div>
+        </section>
+
+        <section>
+            <h2>Пример кода</h2>
+            <p>Следующий скетч демонстрирует базовый опрос датчика. При обнаружении движения загорается встроенный светодиод (LED_BUILTIN) и выводится сообщение в Serial монитор.</p>
+
+<pre><code>// Определение пинов
+const int pirPin = D1;      // Пин подключения датчика OUT
+const int ledPin = LED_BUILTIN; // Встроенный светодиод (обычно D4)
+
+// Переменные состояния
+int motionState = 0;
+int prevMotionState = 0;
+
+void setup() {
+  Serial.begin(115200);
+  
+  pinMode(pirPin, INPUT);
+  pinMode(ledPin, OUTPUT);
+  
+  digitalWrite(ledPin, HIGH); // Выключаем светодиод (инверсная логика на NodeMCU)
+  
+  Serial.println("Инициализация датчика AM312...");
+  delay(2000); // Даем датчику стабилизироваться после включения
+  Serial.println("Система готова. Ожидание движения...");
+}
+
+void loop() {
+  motionState = digitalRead(pirPin);
+  
+  if (motionState == HIGH) {
+    // Движение обнаружено
+    if (prevMotionState == 0) {
+      Serial.println(">>> ДВИЖЕНИЕ ОБНАРУЖЕНО! <<<");
+      digitalWrite(ledPin, LOW); // Включаем светодиод
+      // Здесь можно добавить отправку уведомления в Telegram или на сервер
+    }
+    prevMotionState = 1;
+  } else {
+    // Движения нет
+    if (prevMotionState == 1) {
+      Serial.println("--- Движение прекратилось ---");
+      digitalWrite(ledPin, HIGH); // Выключаем светодиод
+    }
+    prevMotionState = 0;
+  }
+  
+  // Небольшая задержка для стабильности
+  delay(100);
+}</code></pre>
+
+            <h3>Как это работает:</h3>
+            <ol>
+                <li>Мы считываем состояние пина <code>pirPin</code>.</li>
+                <li>Если значение меняется с <code>LOW</code> на <code>HIGH</code>, значит, датчик зафиксировал движение.</li>
+                <li>Логика с переменной <code>prevMotionState</code> нужна, чтобы выводить сообщение только один раз в момент начала движения, а не каждый цикл программы (иначе консоль заполнится мусором).</li>
+                <li>Время активного сигнала у AM312 фиксировано (около 2 секунд). Повторное срабатывание возможно только после паузы.</li>
+            </ol>
+        </section>
+
+        <section>
+            <h2>Особенности использования</h2>
+            <ul>
+                <li><strong>Время задержки</strong>: После срабатывания датчик выдает высокий уровень около 2 секунд. В это время он не реагирует на новые движения. Это нужно учитывать при написании логики.</li>
+                <li><strong>Температурная зависимость</strong>: Как и все PIR-датчики, AM312 может быть менее чувствителен в очень жаркую погоду (когда температура тела близка к температуре окружающей среды).</li>
+                <li><strong>Ложные срабатывания</strong>: Избегайте установки датчика напротив кондиционеров, батарей отопления или окон, где есть потоки горячего/холодного воздуха.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Применение в проектах</h2>
+            <p>Благодаря низким размерам и энергопотреблению, AM312 идеально подходит для:</p>
+            <ul>
+                <li><strong>Умного освещения</strong>: Включение света в коридоре или шкафу при открытии двери.</li>
+                <li><strong>Охранных систем</strong>: Отправка push-уведомлений при проникновении.</li>
+                <li><strong>Энергосбережения</strong>: Пробуждение ESP8266 из глубокого сна (Deep Sleep) только при наличии людей в комнате.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Заключение</h2>
+            <p>Датчик AM312 — это отличное решение для компактных проектов на ESP8266, где важны размер и энергоэффективность. Его простая схема подключения и отсутствие необходимости в сложной калибровке позволяют быстро интегрировать его в системы умного дома.</p>
+        </section>
+
+    </article>
+
+    <footer>
+        <p>&copy; 2026 ESP8266 Electronics Lab. Статья основана на материалах psseven.ru</p>
+        <p style="font-size: 0.8em; margin-top: 10px; opacity: 0.6;">Made with ❤️ and ⚡</p>
+    </footer>
+
+</body>
+</html>

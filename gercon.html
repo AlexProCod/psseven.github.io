@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Подключение магнитного геркона к ESP8266</title>
+    <!-- Шрифты в техническом стиле -->
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --card-bg: #161b22;
+            --text-main: #c9d1d9;
+            --text-muted: #8b949e;
+            --accent-green: #2ea043;
+            --accent-blue: #58a6ff;
+            --accent-red: #da3633;
+            --accent-yellow: #d29922;
+            --border-color: #30363d;
+            --code-bg: #0d1117;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.7;
+            background-image: 
+                linear-gradient(rgba(13, 17, 23, 0.95), rgba(13, 17, 23, 0.95)),
+                url("image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%232ea043' fill-opacity='0.05' fill-rule='evenodd'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        /* Навигация */
+        .nav-bar {
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--accent-green);
+            font-size: 1.5rem;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .back-btn {
+            color: var(--accent-blue);
+            text-decoration: none;
+            font-family: 'Share Tech Mono', monospace;
+            border: 1px solid var(--accent-blue);
+            padding: 5px 15px;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background-color: var(--accent-blue);
+            color: #fff;
+            box-shadow: 0 0 10px rgba(88, 166, 255, 0.4);
+        }
+
+        /* Контент статьи */
+        .article-container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px 60px;
+        }
+
+        header.article-header {
+            margin-bottom: 40px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 20px;
+        }
+
+        h1 {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 2.2rem;
+            color: #fff;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        h1 span {
+            color: var(--accent-green);
+        }
+
+        .intro {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--accent-blue);
+            margin-top: 40px;
+            margin-bottom: 20px;
+            font-size: 1.6rem;
+            border-left: 4px solid var(--accent-blue);
+            padding-left: 15px;
+        }
+
+        h3 {
+            color: var(--text-main);
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        p {
+            margin-bottom: 15px;
+        }
+
+        ul, ol {
+            margin-bottom: 20px;
+            padding-left: 25px;
+        }
+
+        li {
+            margin-bottom: 10px;
+            color: var(--text-main);
+        }
+
+        strong {
+            color: #fff;
+        }
+
+        /* Таблица */
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 25px 0;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: var(--card-bg);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.95rem;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: rgba(46, 160, 67, 0.1);
+            color: var(--accent-green);
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        /* Блок кода */
+        pre {
+            background-color: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 20px;
+            overflow-x: auto;
+            margin: 25px 0;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.9rem;
+            color: #e6edf3;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        code {
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--accent-yellow);
+        }
+
+        pre code {
+            color: inherit;
+            background: none;
+            padding: 0;
+        }
+
+        /* Предупреждения */
+        .alert {
+            padding: 15px 20px;
+            border-radius: 6px;
+            margin: 25px 0;
+            border-left: 4px solid;
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        .alert-warning {
+            border-color: var(--accent-red);
+            background-color: rgba(218, 54, 51, 0.1);
+        }
+
+        .alert-info {
+            border-color: var(--accent-blue);
+            background-color: rgba(88, 166, 255, 0.1);
+        }
+
+        .alert-title {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .alert-warning .alert-title { color: var(--accent-red); }
+        .alert-info .alert-title { color: var(--accent-blue); }
+
+        /* Схема резистора */
+        .resistor-note {
+            background-color: rgba(210, 153, 34, 0.1);
+            border: 1px dashed var(--accent-yellow);
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+        }
+        
+        .resistor-icon {
+            font-size: 1.5rem;
+            color: var(--accent-yellow);
+        }
+
+        /* Ссылки в тексте */
+        a {
+            color: var(--accent-blue);
+            text-decoration: none;
+            border-bottom: 1px dotted var(--accent-blue);
+            transition: all 0.2s;
+        }
+
+        a:hover {
+            color: #fff;
+            border-bottom-style: solid;
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border-color);
+            margin-top: 60px;
+            font-size: 0.9rem;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 600px) {
+            h1 { font-size: 1.8rem; }
+            h2 { font-size: 1.4rem; }
+            .nav-container { flex-direction: column; gap: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Навигация -->
+    <nav class="nav-bar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">&lt;ESP8266_LAB /&gt;</a>
+            <a href="index.html" class="back-btn">← Назад к списку проектов</a>
+        </div>
+    </nav>
+
+    <!-- Основной контент -->
+    <article class="article-container">
+        <header class="article-header">
+            <h1>Подключение магнитного <span>геркона</span> к ESP8266</h1>
+            <p class="intro">
+                Магнитный геркон (герметичный контакт) — это простой, надежный и дешевый датчик, используемый для определения положения дверей, окон и ворот. Он состоит из двух частей: самого контакта и магнита. При сближении магнита контакты замыкаются, при удалении — размыкаются. В этой статье мы рассмотрим, как подключить геркон к ESP8266 для создания системы охраны или умного дома.
+            </p>
+        </header>
+
+        <section>
+            <h2>Принцип работы</h2>
+            <p>Геркон представляет собой стеклянную колбу с двумя контактами из ферромагнитного материала. В обычном состоянии (без магнита) контакты разомкнуты (нормально открытый тип, NO). Когда вы подносите магнит, поле намагничивает контакты, они притягиваются друг к другу и замыкают цепь.</p>
+            <ul>
+                <li><strong>Магнит рядом</strong>: Цепь замкнута (сопротивление ≈ 0 Ом).</li>
+                <li><strong>Магнит далеко</strong>: Цепь разомкнута (сопротивление = бесконечность).</li>
+            </ul>
+            <p>Для микроконтроллера это цифровой сигнал: 0 (LOW) или 1 (HIGH).</p>
+        </section>
+
+        <section>
+            <h2>Что вам понадобится</h2>
+            <ul>
+                <li>Микроконтроллер ESP8266 (NodeMCU, Wemos D1 Mini).</li>
+                <li>Магнитный геркон (модуль или просто два компонента: геркон + магнит).</li>
+                <li>Резистор номиналом <strong>10 кОм</strong> (подтягивающий).</li>
+                <li>Соединительные провода.</li>
+                <li>Компьютер с Arduino IDE.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Схема подключения</h2>
+            <p>Поскольку геркон — это просто механический переключатель, его нельзя подключать напрямую к пину ввода без подтягивающего резистора. Без резистора вход будет «висеть в воздухе» и ловить помехи, когда контакты разомкнуты.</p>
+
+            <div class="resistor-note">
+                <div class="resistor-icon">⚡</div>
+                <div>
+                    <strong>❗ Важно: Подтягивающий резистор</strong><br>
+                    Нам нужно собрать делитель так, чтобы при разомкнутом герконе на пине был логический уровень (например, HIGH), а при замкнутом — противоположный (LOW).<br>
+                    Используем схему с <strong>подтяжкой к питанию (Pull-Up)</strong>.
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Контакт геркона</th>
+                            <th>Подключение</th>
+                            <th>Описание</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Вывод 1</strong></td>
+                            <td>GND</td>
+                            <td>Земля</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Вывод 2</strong></td>
+                            <td>Пин GPIO (напр. D1) + Резистор 10кОм → 3V3</td>
+                            <td>Сигнальный пин с подтяжкой</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Порядок сборки:</h3>
+            <ol>
+                <li>Один вывод геркона подключите к <strong>GND</strong> ESP8266.</li>
+                <li>Второй вывод геркона подключите к цифровому пину, например <strong>D1 (GPIO5)</strong>.</li>
+                <li>Между пином <strong>D1</strong> и пином <strong>3V3</strong> подключите резистор <strong>10 кОм</strong>.</li>
+            </ol>
+
+            <p><strong>Логика работы такой схемы:</strong></p>
+            <ul>
+                <li><strong>Дверь закрыта (Магнит рядом)</strong>: Геркон замкнут → Пин D1 соединен с GND → Считываем <strong>LOW (0)</strong>.</li>
+                <li><strong>Дверь открыта (Магнит далеко)</strong>: Геркон разомкнут → Ток идет через резистор от 3V3 → Считываем <strong>HIGH (1)</strong>.</li>
+            </ul>
+            
+            <div class="alert alert-info">
+                <span class="alert-title">💡 Альтернатива: Встроенная подтяжка</span>
+                В коде можно активировать внутренний подтягивающий резистор ESP8266 командой <code>pinMode(pin, INPUT_PULLUP)</code>. В этом случае внешний резистор на 10 кОм не нужен! Просто подключите геркон между пином и GND.
+            </div>
+        </section>
+
+        <section>
+            <h2>Пример кода</h2>
+            <p>Скетч использует встроенный подтягивающий резистор (<code>INPUT_PULLUP</code>), поэтому внешние компоненты минимизированы. При открытии двери (размыкании геркона) загорается светодиод и пишется сообщение в консоль.</p>
+
+<pre><code>// Пины
+const int reedPin = D1;          // Пин подключения геркона
+const int ledPin = LED_BUILTIN;  // Встроенный светодиод
+
+// Переменные состояния
+int doorState = 0;
+int lastDoorState = 0;
+
+void setup() {
+  Serial.begin(115200);
+  
+  // Активируем встроенный подтягивающий резистор
+  pinMode(reedPin, INPUT_PULLUP);
+  pinMode(ledPin, OUTPUT);
+  
+  digitalWrite(ledPin, HIGH); // Выключаем светодиод (инверсная логика)
+  
+  Serial.println("Система охраны запущена...");
+  delay(1000);
+}
+
+void loop() {
+  // Считываем состояние геркона
+  // LOW = Магнит рядом (Дверь закрыта)
+  // HIGH = Магнит далеко (Дверь открыта)
+  doorState = digitalRead(reedPin);
+  
+  // Детектируем изменение состояния (фронт сигнала)
+  if (doorState != lastDoorState) {
+    
+    if (doorState == HIGH) {
+      // Дверь ОТКРЫЛИ
+      Serial.println("!!! ВНИМАНИЕ: Дверь открыта! !!!");
+      digitalWrite(ledPin, LOW); // Включаем светодиод
+      // Здесь можно добавить отправку уведомления в Telegram
+    } else {
+      // Дверь ЗАКРЫЛИ
+      Serial.println("--- Дверь закрыта ---");
+      digitalWrite(ledPin, HIGH); // Выключаем светодиод
+    }
+    
+    // Небольшая задержка, чтобы избежать дребезга контактов
+    delay(50); 
+  }
+  
+  lastDoorState = doorState;
+}</code></pre>
+
+            <h3>Проблема дребезга контактов</h3>
+            <p>Механические контакты геркона при замыкании могут «дребезжать» (быстро менять состояние несколько раз за миллисекунды). В простом примере выше это решается проверкой изменения состояния и небольшой задержкой. Для более сложных проектов используйте библиотеку <code>Bounce2</code> для программной фильтрации дребезга.</p>
+        </section>
+
+        <section>
+            <h2>Монтаж и установка</h2>
+        <ul>
+            <li><strong>Расстояние</strong>: Убедитесь, что расстояние между герконом и магнитом в закрытом состоянии не превышает 1-2 см (зависит от мощности магнита).</li>
+            <li><strong>Ориентация</strong>: На корпусе геркона и магнита обычно есть метки. Устанавливайте их параллельно друг другу для надежного срабатывания.</li>
+            <li><strong>Изоляция</strong>: Если система устанавливается на улице, обязательно поместите геркон и место пайки в термоусадку или влагозащищенный корпус, так как сам по себе геркон водонепроницаем, а провода и контакты — нет.</li>
+        </ul>
+        </section>
+
+        <section>
+            <h2>Применение в умном доме</h2>
+            <p>Герконы — основа любой системы безопасности:</p>
+            <ul>
+                <li><strong>Охрана периметра</strong>: Отправка мгновенных уведомлений в Telegram при открытии входной двери.</li>
+                <li><strong>Автоматизация</strong>: Включение света в шкафу или холодильнике при открытии дверцы.</li>
+                <li><strong>Контроль окон</strong>: Автоматическое выключение кондиционера или климат-контроля при открытии окна для экономии энергии.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Заключение</h2>
+            <p>Магнитный геркон — это классическое, проверенное временем решение для контроля доступа. Его простота, надежность и отсутствие необходимости в сложной калибровке делают его идеальным выбором для проектов на ESP8266. Главное — не забыть про подтягивающий резистор (внешний или программный) и защиту от дребезга.</p>
+        </section>
+
+    </article>
+
+    <footer>
+        <p>&copy; 2026 ESP8266 Electronics Lab. Статья основана на материалах psseven.ru</p>
+        <p style="font-size: 0.8em; margin-top: 10px; opacity: 0.6;">Made with ❤️ and ⚡</p>
+    </footer>
+
+</body>
+</html>

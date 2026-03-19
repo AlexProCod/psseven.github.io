@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Подключение датчика тока ACS712 к ESP8266</title>
+    <!-- Шрифты в техническом стиле -->
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --card-bg: #161b22;
+            --text-main: #c9d1d9;
+            --text-muted: #8b949e;
+            --accent-green: #2ea043;
+            --accent-blue: #58a6ff;
+            --accent-red: #da3633;
+            --accent-yellow: #d29922;
+            --border-color: #30363d;
+            --code-bg: #0d1117;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.7;
+            background-image: 
+                linear-gradient(rgba(13, 17, 23, 0.95), rgba(13, 17, 23, 0.95)),
+                url("image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%232ea043' fill-opacity='0.05' fill-rule='evenodd'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        /* Навигация */
+        .nav-bar {
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--accent-green);
+            font-size: 1.5rem;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .back-btn {
+            color: var(--accent-blue);
+            text-decoration: none;
+            font-family: 'Share Tech Mono', monospace;
+            border: 1px solid var(--accent-blue);
+            padding: 5px 15px;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background-color: var(--accent-blue);
+            color: #fff;
+            box-shadow: 0 0 10px rgba(88, 166, 255, 0.4);
+        }
+
+        /* Контент статьи */
+        .article-container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px 60px;
+        }
+
+        header.article-header {
+            margin-bottom: 40px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 20px;
+        }
+
+        h1 {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 2.2rem;
+            color: #fff;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        h1 span {
+            color: var(--accent-green);
+        }
+
+        .intro {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--accent-blue);
+            margin-top: 40px;
+            margin-bottom: 20px;
+            font-size: 1.6rem;
+            border-left: 4px solid var(--accent-blue);
+            padding-left: 15px;
+        }
+
+        h3 {
+            color: var(--text-main);
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        p {
+            margin-bottom: 15px;
+        }
+
+        ul, ol {
+            margin-bottom: 20px;
+            padding-left: 25px;
+        }
+
+        li {
+            margin-bottom: 10px;
+            color: var(--text-main);
+        }
+
+        strong {
+            color: #fff;
+        }
+
+        /* Таблица */
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 25px 0;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: var(--card-bg);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.95rem;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: rgba(46, 160, 67, 0.1);
+            color: var(--accent-green);
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        /* Блок кода */
+        pre {
+            background-color: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 20px;
+            overflow-x: auto;
+            margin: 25px 0;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.9rem;
+            color: #e6edf3;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        code {
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--accent-yellow);
+        }
+
+        pre code {
+            color: inherit;
+            background: none;
+            padding: 0;
+        }
+
+        /* Предупреждения */
+        .alert {
+            padding: 15px 20px;
+            border-radius: 6px;
+            margin: 25px 0;
+            border-left: 4px solid;
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        .alert-warning {
+            border-color: var(--accent-red);
+            background-color: rgba(218, 54, 51, 0.1);
+        }
+
+        .alert-info {
+            border-color: var(--accent-blue);
+            background-color: rgba(88, 166, 255, 0.1);
+        }
+
+        .alert-title {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .alert-warning .alert-title { color: var(--accent-red); }
+        .alert-info .alert-title { color: var(--accent-blue); }
+
+        /* Формулы и вычисления */
+        .formula-box {
+            background-color: rgba(210, 153, 34, 0.1);
+            border: 1px dashed var(--accent-yellow);
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--accent-yellow);
+        }
+
+        /* Ссылки в тексте */
+        a {
+            color: var(--accent-blue);
+            text-decoration: none;
+            border-bottom: 1px dotted var(--accent-blue);
+            transition: all 0.2s;
+        }
+
+        a:hover {
+            color: #fff;
+            border-bottom-style: solid;
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border-color);
+            margin-top: 60px;
+            font-size: 0.9rem;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 600px) {
+            h1 { font-size: 1.8rem; }
+            h2 { font-size: 1.4rem; }
+            .nav-container { flex-direction: column; gap: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Навигация -->
+    <nav class="nav-bar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">&lt;ESP8266_LAB /&gt;</a>
+            <a href="index.html" class="back-btn">← Назад к списку проектов</a>
+        </div>
+    </nav>
+
+    <!-- Основной контент -->
+    <article class="article-container">
+        <header class="article-header">
+            <h1>Подключение датчика тока <span>ACS712</span> к ESP8266</h1>
+            <p class="intro">
+                Датчик тока ACS712 — это популярный модуль на основе эффекта Холла, позволяющий измерять силу тока в цепях переменного (AC) и постоянного (DC) напряжения. В этой статье мы рассмотрим, как подключить ACS712 к микроконтроллеру ESP8266, рассчитать реальное значение тока и вывести данные в_serial монитор.
+            </p>
+        </header>
+
+        <section>
+            <h2>Особенности модуля ACS712</h2>
+            <p>Модуль ACS712 бывает трех типов в зависимости от диапазона измеряемого тока:</p>
+            <ul>
+                <li><strong>ACS712ELCTR-05B</strong>: диапазон ±5А (чувствительность 185 мВ/А).</li>
+                <li><strong>ACS712ELCTR-20A</strong>: диапазон ±20А (чувствительность 100 мВ/А).</li>
+                <li><strong>ACS712ELCTR-30A</strong>: диапазон ±30А (чувствительность 66 мВ/А).</li>
+            </ul>
+            <p>Принцип работы основан на измерении падения напряжения на выходе датчика, которое пропорционально протекающему току. При отсутствии тока напряжение на выходе равно половине напряжения питания (VCC / 2).</p>
+        </section>
+
+        <section>
+            <h2>Что вам понадобится</h2>
+            <ul>
+                <li>Микроконтроллер ESP8266 (NodeMCU, Wemos D1 Mini).</li>
+                <li>Датчик тока ACS712 (любого диапазона).</li>
+                <li>Соединительные провода.</li>
+                <li>Нагрузка для тестирования (лампочка, мотор и т.д.).</li>
+                <li>Источник питания нагрузки.</li>
+                <li>Компьютер с Arduino IDE.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Схема подключения</h2>
+            <p>Датчик ACS712 имеет три контакта для подключения к микроконтроллеру и два винтовых клеммника для подключения измеряемой цепи.</p>
+            
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Пин ACS712</th>
+                            <th>Пин ESP8266</th>
+                            <th>Описание</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>VCC</strong></td>
+                            <td>3V3 (или 5V)</td>
+                            <td>Питание датчика (работает от 5В, но выход совместим с 3.3В логикой)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>GND</strong></td>
+                            <td>GND</td>
+                            <td>Общая земля</td>
+                        </tr>
+                        <tr>
+                            <td><strong>OUT</strong></td>
+                            <td>A0 (GPIO17)</td>
+                            <td>Аналоговый выход сигнала</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="alert alert-warning">
+                <span class="alert-title">⚠️ ТЕХНИКА БЕЗОПАСНОСТИ</span>
+                Будьте предельно осторожны при измерении тока в цепях <strong>220В</strong>. 
+                <br>1. Все соединения силовой цепи должны быть надежно изолированы.
+                <br>2. Не прикасайтесь к оголенным частям цепи под напряжением.
+                <br>3. Рекомендуется сначала протестировать схему на безопасном напряжении (например, 12В DC).
+            </div>
+
+            <h3>Порядок подключения:</h3>
+            <ol>
+                <li>Подключите <strong>VCC</strong> датчика к пину <strong>3V3</strong> (или 5V, если есть внешний источник) на ESP8266.</li>
+                <li>Подключите <strong>GND</strong> датчика к <strong>GND</strong> ESP8266.</li>
+                <li>Подключите вывод <strong>OUT</strong> датчика к аналоговому входу <strong>A0</strong> на ESP8266.</li>
+                <li>Разомкните цепь нагрузки и включите её разрыв в винтовые клеммы датчика (контакты IP+ и IP-). Полярность для AC не важна, для DC влияет на знак тока.</li>
+            </ol>
+        </section>
+
+        <section>
+            <h2>Принцип расчета тока</h2>
+            <p>ESP8266 имеет 10-битный АЦП (диапазон значений 0–1023), который преобразует напряжение 0–1.0В (на большинстве плат NodeMCU стоит делитель, поэтому фактический диапазон 0–3.3В соответствует 0–1023).</p>
+            
+            <div class="formula-box">
+                Формула расчета:<br>
+                1. Напряжение на пине: U = (ADC_Value / 1024.0) * 3.3<br>
+                2. Смещение нуля: U_zero = 2.5В (при питании 5В) или ~1.65В (при питании 3.3В)<br>
+                3. Ток: I = (U - U_zero) / Чувствительность
+            </div>
+
+            <p>Так как ESP8266 работает с 3.3В логикой, а датчик часто питают от 5В для стабильности, напряжение покоя (без тока) будет около 2.5В. Однако вход A0 у ESP8266 ограничен 1.0В (на старых платах) или 3.3В (на новых с делителем). Для упрощения в примере ниже мы будем считать, что плата имеет встроенный делитель напряжения на входе A0 (как NodeMCU v3).</p>
+        </section>
+
+        <section>
+            <h2>Пример кода</h2>
+            <p>Следующий скетч считывает показания с аналогового входа, усредняет их для стабильности и переводит в Амперы.</p>
+
+<pre><code>// Константы для калибровки
+const int sensorPin = A0;       // Пин подключения датчика
+const float zeroOffset = 512.0; // Значение АЦП без тока (середина диапазона 1024)
+                                // Требуется калибровка! Измерьте значение без нагрузки.
+const float sensitivity = 100.0; // Чувствительность в мВ/А (100 для 20А, 185 для 5А)
+                                // Для ESP8266 с делителем нужно пересчитать коэффициент
+
+// Переменные
+float current = 0.0;
+int adcValue = 0;
+
+void setup() {
+  Serial.begin(115200);
+  Serial.println("Инициализация датчика тока ACS712...");
+  delay(1000);
+}
+
+void loop() {
+  // Считываем несколько значений для усреднения (фильтрация шумов)
+  long sum = 0;
+  for (int i = 0; i < 100; i++) {
+    sum += analogRead(sensorPin);
+    delay(5);
+  }
+  
+  float avgADC = sum / 100.0;
+  
+  // Расчет напряжения (для ESP8266 с диапазоном 0-3.3В и 10 бит)
+  float voltage = avgADC * (3.3 / 1024.0);
+  
+  // Расчет тока
+  // Напряжение нулевой точки при питании 5В обычно 2.5В
+  // Но если питаем от 3.3В, то ноль будет около 1.65В
+  // В данном примере предполагаем питание датчика от 3.3В для простоты с ESP8266
+  float zeroVoltage = 1.65; 
+  
+  float deltaV = voltage - zeroVoltage;
+  
+  // Чувствительность для 20А модуля = 0.100 В/А
+  // Для 5А модуля = 0.185 В/А
+  current = deltaV / (sensitivity / 1000.0);
+  
+  Serial.print("ADC: ");
+  Serial.print(avgADC);
+  Serial.print(" | Напряжение: ");
+  Serial.print(voltage, 3);
+  Serial.print(" В | Ток: ");
+  Serial.print(current, 3);
+  Serial.println(" А");
+  
+  delay(500);
+}</code></pre>
+
+            <div class="alert alert-info">
+                <span class="alert-title">💡 ВАЖНО: Калибровка</span>
+                Значение <code>zeroOffset</code> (или напряжение нуля) может отличаться в зависимости от конкретного экземпляра датчика и качества питания. 
+                <br>1. Загрузите код без подключенной нагрузки.
+                <br>2. Посмотрите в Serial Monitor значение тока.
+                <br>3. Если оно не равно 0.00, подкорректируйте переменную <code>zeroVoltage</code> или <code>zeroOffset</code> в коде, пока ток не станет нулевым.
+            </div>
+        </section>
+
+        <section>
+            <h2>Тестирование и нюансы</h2>
+            <ul>
+                <li><strong>Шумы</strong>: Аналоговый сигнал чувствителен к помехам. Используйте усреднение (как в коде выше) или конденсатор небольшой емкости между OUT и GND.</li>
+                <li><strong>Питание</strong>: Для точных измерений лучше питать датчик от стабильных 5В, а сигнал на A0 подавать через делитель, если ваша плата ESP8266 не имеет встроенного делителя на входе A0.</li>
+                <li><strong>Переменный ток</strong>: Для измерения AC тока нужно снимать показания быстро в течение периода синусоиды, находить максимальное и минимальное значение, либо вычислять среднеквадратичное значение (RMS).</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Заключение</h2>
+            <p>Датчик ACS712 — отличное решение для мониторинга энергопотребления в проектах умного дома. Вы можете отслеживать расход электроэнергии лампами, приборами или контролировать зарядку аккумуляторов. Комбинируя этот датчик с Wi-Fi возможностями ESP8266, можно отправлять данные о токе на сервер или в Telegram.</p>
+        </section>
+
+    </article>
+
+    <footer>
+        <p>&copy; 2026 ESP8266 Electronics Lab. Статья основана на материалах psseven.ru</p>
+        <p style="font-size: 0.8em; margin-top: 10px; opacity: 0.6;">Made with ❤️ and ⚡</p>
+    </footer>
+
+</body>
+</html>

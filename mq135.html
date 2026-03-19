@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Подключение датчика газа MQ135 к ESP8266</title>
+    <!-- Шрифты в техническом стиле -->
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --card-bg: #161b22;
+            --text-main: #c9d1d9;
+            --text-muted: #8b949e;
+            --accent-green: #2ea043;
+            --accent-blue: #58a6ff;
+            --accent-red: #da3633;
+            --accent-yellow: #d29922;
+            --border-color: #30363d;
+            --code-bg: #0d1117;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.7;
+            background-image: 
+                linear-gradient(rgba(13, 17, 23, 0.95), rgba(13, 17, 23, 0.95)),
+                url("image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%232ea043' fill-opacity='0.05' fill-rule='evenodd'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        /* Навигация */
+        .nav-bar {
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--accent-green);
+            font-size: 1.5rem;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .back-btn {
+            color: var(--accent-blue);
+            text-decoration: none;
+            font-family: 'Share Tech Mono', monospace;
+            border: 1px solid var(--accent-blue);
+            padding: 5px 15px;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background-color: var(--accent-blue);
+            color: #fff;
+            box-shadow: 0 0 10px rgba(88, 166, 255, 0.4);
+        }
+
+        /* Контент статьи */
+        .article-container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px 60px;
+        }
+
+        header.article-header {
+            margin-bottom: 40px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 20px;
+        }
+
+        h1 {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 2.2rem;
+            color: #fff;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        h1 span {
+            color: var(--accent-green);
+        }
+
+        .intro {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--accent-blue);
+            margin-top: 40px;
+            margin-bottom: 20px;
+            font-size: 1.6rem;
+            border-left: 4px solid var(--accent-blue);
+            padding-left: 15px;
+        }
+
+        h3 {
+            color: var(--text-main);
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        p {
+            margin-bottom: 15px;
+        }
+
+        ul, ol {
+            margin-bottom: 20px;
+            padding-left: 25px;
+        }
+
+        li {
+            margin-bottom: 10px;
+            color: var(--text-main);
+        }
+
+        strong {
+            color: #fff;
+        }
+
+        /* Таблица */
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 25px 0;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: var(--card-bg);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.95rem;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: rgba(46, 160, 67, 0.1);
+            color: var(--accent-green);
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        /* Блок кода */
+        pre {
+            background-color: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 20px;
+            overflow-x: auto;
+            margin: 25px 0;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.9rem;
+            color: #e6edf3;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        code {
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--accent-yellow);
+        }
+
+        pre code {
+            color: inherit;
+            background: none;
+            padding: 0;
+        }
+
+        /* Предупреждения */
+        .alert {
+            padding: 15px 20px;
+            border-radius: 6px;
+            margin: 25px 0;
+            border-left: 4px solid;
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        .alert-warning {
+            border-color: var(--accent-red);
+            background-color: rgba(218, 54, 51, 0.1);
+        }
+
+        .alert-info {
+            border-color: var(--accent-blue);
+            background-color: rgba(88, 166, 255, 0.1);
+        }
+
+        .alert-title {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .alert-warning .alert-title { color: var(--accent-red); }
+        .alert-info .alert-title { color: var(--accent-blue); }
+
+        /* Ссылки в тексте */
+        a {
+            color: var(--accent-blue);
+            text-decoration: none;
+            border-bottom: 1px dotted var(--accent-blue);
+            transition: all 0.2s;
+        }
+
+        a:hover {
+            color: #fff;
+            border-bottom-style: solid;
+        }
+
+        /* Видео секция */
+        .video-section {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            margin: 40px 0;
+        }
+
+        .video-btn {
+            display: inline-block;
+            background-color: var(--accent-green);
+            color: #fff;
+            padding: 12px 25px;
+            border-radius: 4px;
+            font-family: 'Share Tech Mono', monospace;
+            font-weight: bold;
+            text-decoration: none;
+            margin-top: 15px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .video-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(46, 160, 67, 0.4);
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border-color);
+            margin-top: 60px;
+            font-size: 0.9rem;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 600px) {
+            h1 { font-size: 1.8rem; }
+            h2 { font-size: 1.4rem; }
+            .nav-container { flex-direction: column; gap: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Навигация -->
+    <nav class="nav-bar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">&lt;ESP8266_LAB /&gt;</a>
+            <a href="index.html" class="back-btn">← Назад к списку проектов</a>
+        </div>
+    </nav>
+
+    <!-- Основной контент -->
+    <article class="article-container">
+        <header class="article-header">
+            <h1>Подключение датчика газа <span>MQ135</span> к ESP8266</h1>
+            <p class="intro">
+                Датчик газа MQ135 — это универсальный сенсор качества воздуха, способный обнаруживать широкий спектр вредных газов: аммиак, сернистый газ, бензол, дым и углекислый газ (CO2). В этой статье мы рассмотрим подключение модуля к ESP8266, особенности его прогрева и написание кода для считывания показаний.
+            </p>
+        </header>
+
+        <section>
+            <h2>Особенности датчика MQ135</h2>
+            <p>Модуль MQ135 содержит чувствительный элемент из диоксида олова (SnO2), сопротивление которого меняется при контакте с загрязненным воздухом. Модуль обычно имеет два типа выходов:</p>
+            <ul>
+                <li><strong>Аналоговый выход (AO)</strong>: Выдает напряжение, пропорциональное концентрации газа. Используется для оценки уровня загрязнения.</li>
+                <li><strong>Цифровой выход (DO)</strong>: Срабатывает как переключатель при превышении порогового значения (настраивается потенциометром на плате).</li>
+            </ul>
+            <p>Для получения точных данных мы будем использовать аналоговый выход и микроконтроллер ESP8266.</p>
+        </section>
+
+        <section>
+            <h2>Что вам понадобится</h2>
+            <ul>
+                <li>Микроконтроллер ESP8266 (NodeMCU, Wemos D1 Mini).</li>
+                <li>Датчик газа MQ135 (модуль с компаратором или сырой сенсор).</li>
+                <li>Соединительные провода.</li>
+                <li>Компьютер с Arduino IDE.</li>
+                <li>USB-кабель.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Схема подключения</h2>
+            <p>Подключение модуля MQ135 к ESP8266 осуществляется через аналоговый вход. Обратите внимание, что датчик потребляет значительный ток для нагрева элемента, поэтому питание лучше брать стабильное.</p>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Пин MQ135</th>
+                            <th>Пин ESP8266</th>
+                            <th>Описание</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>VCC</strong></td>
+                            <td>5V (рекомендуется) или 3V3</td>
+                            <td>Питание нагревательного элемента</td>
+                        </tr>
+                        <tr>
+                            <td><strong>GND</strong></td>
+                            <td>GND</td>
+                            <td>Общая земля</td>
+                        </tr>
+                        <tr>
+                            <td><strong>AO</strong></td>
+                            <td>A0 (GPIO17)</td>
+                            <td>Аналоговый сигнал</td>
+                        </tr>
+                        <tr>
+                            <td><strong>DO</strong></td>
+                            <td>Не подключается</td>
+                            <td>Цифровой выход (не используется в этом примере)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="alert alert-warning">
+                <span class="alert-title">⚠️ ВАЖНО: Время прогрева</span>
+                Датчик MQ135 требует времени на прогрев чувствительного элемента перед первым использованием.
+                <br>1. При первом включении дайте датчику поработать <strong>от 24 до 48 часов</strong> в обычном режиме для стабилизации.
+                <br>2. Перед каждым измерением рекомендуется давать ему прогреться минимум 1-2 минуты после подачи питания.
+                <br>3. Не вдыхайте пары от работающего датчика в первые часы работы!
+            </div>
+
+            <h3>Порядок подключения:</h3>
+            <ol>
+                <li>Подключите <strong>VCC</strong> датчика к пину <strong>5V</strong> на NodeMCU (или 3V3, если нет доступа к 5В, но точность может снизиться).</li>
+                <li>Подключите <strong>GND</strong> датчика к <strong>GND</strong> ESP8266.</li>
+                <li>Подключите вывод <strong>AO</strong> датчика к аналоговому входу <strong>A0</strong> на ESP8266.</li>
+            </ol>
+        </section>
+
+        <section>
+            <h2>Пример кода</h2>
+            <p>Приведенный ниже скетч считывает аналоговое значение, преобразует его в напряжение и выводит условный уровень загрязнения воздуха. Для перевода в ppm (частей на миллион) требуется сложная калибровка по графику из даташита.</p>
+
+<pre><code>// Пины
+const int gasPin = A0; // Аналоговый пин подключения датчика
+
+// Переменные
+int sensorValue = 0;
+float voltage = 0.0;
+
+void setup() {
+  Serial.begin(115200);
+  Serial.println("Инициализация датчика газа MQ135...");
+  Serial.println("Прогрев датчика...");
+  
+  // Даем датчику немного прогреться при старте
+  delay(2000); 
+}
+
+void loop() {
+  // Считываем значение с аналогового входа (0-1023)
+  sensorValue = analogRead(gasPin);
+  
+  // Преобразуем в напряжение (для ESP8266 диапазон 0-3.3В)
+  // Примечание: Если датчик питается от 5В, а вход A0 ограничено 1В или 3.3В,
+  // убедитесь, что напряжение на AO не превышает допустимое для ESP.
+  // Обычно модули имеют делитель, но лучше перепроверить мультиметром.
+  voltage = sensorValue * (3.3 / 1024.0);
+  
+  Serial.print("Значение ADC: ");
+  Serial.print(sensorValue);
+  Serial.print(" | Напряжение: ");
+  Serial.print(voltage, 3);
+  Serial.print(" В");
+  
+  // Простая логика оценки качества воздуха (требует калибровки!)
+  // Чем выше напряжение, тем больше концентрация газа
+  if (voltage < 1.0) {
+    Serial.println(" | Статус: Чистый воздух");
+  } else if (voltage < 2.0) {
+    Serial.println(" | Статус: Загрязнение низкое");
+  } else if (voltage < 2.8) {
+    Serial.println(" | Статус: Загрязнение среднее");
+  } else {
+    Serial.println(" | Статус: ОПАСНО! Высокая концентрация");
+  }
+  
+  delay(1000);
+}</code></pre>
+
+            <div class="alert alert-info">
+                <span class="alert-title">💡 Калибровка для ppm</span>
+                Для получения точных значений в ppm (например, CO2) необходимо:
+                <br>1. Измерить сопротивление сенсора в чистом воздухе (R0).
+                <br>2. Использовать формулу из даташита: <code>Rs/R0 = a * (ppm)^b</code>, где коэффициенты a и b берутся из графика чувствительности.
+                <br>3. В бытовых проектах часто достаточно относительных единиц (ADC value), чтобы отслеживать динамику изменения качества воздуха (проветрили комнату -> показания упали).
+            </div>
+        </section>
+
+        <section>
+            <h2>Возможные проблемы</h2>
+            <ul>
+                <li><strong>Показания "скачут"</strong>: Датчик чувствителен к перепадам напряжения. Попробуйте добавить конденсатор 100мкФ между VCC и GND рядом с датчиком.</li>
+                <li><strong>Значения не меняются</strong>: Убедитесь, что вы используете пин AO, а не DO. Проверьте, прогрелся ли датчик (он должен быть теплым).</li>
+                <li><strong>ESP8266 перезагружается</strong>: Датчик потребляет ток около 150-200мА для нагрева. Если вы питаете всю схему от слабого USB-порта или нестабильного источника, напряжения может не хватать. Используйте качественный блок питания.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Применение в умном доме</h2>
+            <p>Полученные данные можно использовать для:</p>
+            <ul>
+                <li>Автоматического включения вытяжки или вентилятора при ухудшении качества воздуха.</li>
+                <li>Отправки уведомлений в Telegram, если зафиксирован дым или опасная концентрация газов.</li>
+                <li>Ведения логов качества воздуха за сутки/неделю для анализа.</li>
+            </ul>
+        </section>
+
+        <div class="video-section">
+            <h3 style="margin-top:0; color: #fff;">📺 Видеоинструкция</h3>
+            <p style="color: var(--text-muted);">Подробный обзор подключения и тесты датчика.</p>
+            <a href="https://rutube.ru/video/search/?text=mq135+esp8266" target="_blank" class="video-btn">Смотреть видео ▶</a>
+        </div>
+
+        <section>
+            <h2>Заключение</h2>
+            <p>Датчик MQ135 в связке с ESP8266 — это доступное решение для создания системы мониторинга атмосферы в помещении. Несмотря на необходимость длительной первичной калибровки, он отлично справляется с задачей детектирования изменений качества воздуха и может стать частью вашей системы умного дома.</p>
+        </section>
+
+    </article>
+
+    <footer>
+        <p>&copy; 2026 ESP8266 Electronics Lab. Статья основана на материалах psseven.ru</p>
+        <p style="font-size: 0.8em; margin-top: 10px; opacity: 0.6;">Made with ❤️ and ⚡</p>
+    </footer>
+
+</body>
+</html>

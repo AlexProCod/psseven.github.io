@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Подключение OLED-дисплея 128×64 к ESP8266</title>
+    <!-- Шрифты в техническом стиле -->
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --card-bg: #161b22;
+            --text-main: #c9d1d9;
+            --text-muted: #8b949e;
+            --accent-green: #2ea043;
+            --accent-blue: #58a6ff;
+            --accent-red: #da3633;
+            --accent-yellow: #d29922;
+            --border-color: #30363d;
+            --code-bg: #0d1117;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.7;
+            background-image: 
+                linear-gradient(rgba(13, 17, 23, 0.95), rgba(13, 17, 23, 0.95)),
+                url("image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%232ea043' fill-opacity='0.05' fill-rule='evenodd'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        /* Навигация */
+        .nav-bar {
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--accent-green);
+            font-size: 1.5rem;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .back-btn {
+            color: var(--accent-blue);
+            text-decoration: none;
+            font-family: 'Share Tech Mono', monospace;
+            border: 1px solid var(--accent-blue);
+            padding: 5px 15px;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background-color: var(--accent-blue);
+            color: #fff;
+            box-shadow: 0 0 10px rgba(88, 166, 255, 0.4);
+        }
+
+        /* Контент статьи */
+        .article-container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px 60px;
+        }
+
+        header.article-header {
+            margin-bottom: 40px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 20px;
+        }
+
+        h1 {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 2.2rem;
+            color: #fff;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        h1 span {
+            color: var(--accent-green);
+        }
+
+        .intro {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--accent-blue);
+            margin-top: 40px;
+            margin-bottom: 20px;
+            font-size: 1.6rem;
+            border-left: 4px solid var(--accent-blue);
+            padding-left: 15px;
+        }
+
+        h3 {
+            color: var(--text-main);
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        p {
+            margin-bottom: 15px;
+        }
+
+        ul, ol {
+            margin-bottom: 20px;
+            padding-left: 25px;
+        }
+
+        li {
+            margin-bottom: 10px;
+            color: var(--text-main);
+        }
+
+        strong {
+            color: #fff;
+        }
+
+        /* Таблица */
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 25px 0;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: var(--card-bg);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.95rem;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: rgba(46, 160, 67, 0.1);
+            color: var(--accent-green);
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        /* Блок кода */
+        pre {
+            background-color: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 20px;
+            overflow-x: auto;
+            margin: 25px 0;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.9rem;
+            color: #e6edf3;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        code {
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--accent-yellow);
+        }
+
+        pre code {
+            color: inherit;
+            background: none;
+            padding: 0;
+        }
+
+        /* Предупреждения */
+        .alert {
+            padding: 15px 20px;
+            border-radius: 6px;
+            margin: 25px 0;
+            border-left: 4px solid;
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        .alert-warning {
+            border-color: var(--accent-red);
+            background-color: rgba(218, 54, 51, 0.1);
+        }
+
+        .alert-info {
+            border-color: var(--accent-blue);
+            background-color: rgba(88, 166, 255, 0.1);
+        }
+
+        .alert-title {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .alert-warning .alert-title { color: var(--accent-red); }
+        .alert-info .alert-title { color: var(--accent-blue); }
+
+        /* Ссылки в тексте */
+        a {
+            color: var(--accent-blue);
+            text-decoration: none;
+            border-bottom: 1px dotted var(--accent-blue);
+            transition: all 0.2s;
+        }
+
+        a:hover {
+            color: #fff;
+            border-bottom-style: solid;
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border-color);
+            margin-top: 60px;
+            font-size: 0.9rem;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 600px) {
+            h1 { font-size: 1.8rem; }
+            h2 { font-size: 1.4rem; }
+            .nav-container { flex-direction: column; gap: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Навигация -->
+    <nav class="nav-bar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">&lt;ESP8266_LAB /&gt;</a>
+            <a href="index.html" class="back-btn">← Назад к списку проектов</a>
+        </div>
+    </nav>
+
+    <!-- Основной контент -->
+    <article class="article-container">
+        <header class="article-header">
+            <h1>Подключение OLED-дисплея <span>128×64</span> к ESP8266</h1>
+            <p class="intro">
+                OLED-дисплей на базе контроллера <strong>SSD1306</strong> с разрешением 128×64 пикселей — это один из самых популярных способов вывода информации в проектах на ESP8266. Он отличается высокой контрастностью, широким углом обзора, низким энергопотреблением и подключается всего по двум проводам благодаря интерфейсу <strong>I2C</strong>.
+            </p>
+        </header>
+
+        <section>
+            <h2>Преимущества дисплея SSD1306</h2>
+            <ul>
+                <li><strong>Интерфейс I2C</strong>: Требует всего 2 провода для передачи данных (SDA и SCK).</li>
+                <li><strong>Самоподсветка</strong>: Каждый пиксель светится самостоятельно, черный цвет — это выключенный пиксель (идеальный контраст).</li>
+                <li><low>Низкое потребление</strong>: Потребляет значительно меньше энергии, чем LCD экраны с подсветкой.</li>
+                <li><strong>Компактность</strong>: Малые габариты позволяют встраивать его в носимые устройства.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Что вам понадобится</h2>
+            <ul>
+                <li>Микроконтроллер ESP8266 (NodeMCU, Wemos D1 Mini).</li>
+                <li>OLED-дисплей 0.96" 128x64 (контроллер SSD1306).</li>
+                <li>Соединительные провода.</li>
+                <li>Компьютер с Arduino IDE.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Схема подключения (I2C)</h2>
+            <p>Дисплей работает по шине I2C. На платах ESP8266 (NodeMCU, Wemos) пины для I2C уже определены аппаратно.</p>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Пин OLED</th>
+                            <th>Пин ESP8266 (NodeMCU/Wemos)</th>
+                            <th>Описание</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>VCC</strong></td>
+                            <td>3V3</td>
+                            <td>Питание 3.3 В (некоторые модули работают и от 5В, но лучше 3.3В)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>GND</strong></td>
+                            <td>GND</td>
+                            <td>Общая земля</td>
+                        </tr>
+                        <tr>
+                            <td><strong>SCL</strong> (Clock)</td>
+                            <td>D1 (GPIO5)</td>
+                            <td>Линия тактирования I2C</td>
+                        </tr>
+                        <tr>
+                            <td><strong>SDA</strong> (Data)</td>
+                            <td>D2 (GPIO4)</td>
+                            <td>Линия данных I2C</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="alert alert-info">
+                <span class="alert-title">💡 Примечание по пинам</span>
+                По умолчанию в библиотеках для ESP8266 используются пины:<br>
+                <strong>SDA = GPIO4 (D2)</strong><br>
+                <strong>SCL = GPIO5 (D1)</strong><br>
+                Если ваш дисплей не работает, проверьте маркировку на плате. Иногда пины могут быть перепутаны местами на дешевых китайских модулях.
+            </div>
+
+            <h3>Порядок подключения:</h3>
+            <ol>
+                <li>Подключите <strong>VCC</strong> дисплея к <strong>3V3</strong> на ESP8266.</li>
+                <li>Подключите <strong>GND</strong> дисплея к <strong>GND</strong>.</li>
+                <li>Подключите <strong>SCL</strong> дисплея к пину <strong>D1</strong>.</li>
+                <li>Подключите <strong>SDA</strong> дисплея к пину <strong>D2</strong>.</li>
+            </ol>
+        </section>
+
+        <section>
+            <h2>Настройка Arduino IDE</h2>
+            <p>Для работы с дисплеем нам понадобятся две библиотеки. Установите их через <strong>Sketch > Include Library > Manage Libraries</strong>:</p>
+            <ol>
+                <li><strong>Adafruit SSD1306</strong> — основная библиотека для управления дисплеем.</li>
+                <li><strong>Adafruit GFX Library</strong> — базовая графическая библиотека (зависимость для первой).</li>
+            </ol>
+            <p>После установки, возможно, потребуется открыть файл <code>Adafruit_SSD1306.h</code> и раскомментировать строку с определением разрешения дисплея (<code>#define SSD1306_128_64</code>), если примеры не запускаются.</p>
+        </section>
+
+        <section>
+            <h2>Пример кода</h2>
+            <p>Этот скетч инициализирует дисплей, выводит приветственный текст, рисует прямоугольник и отображает счетчик секунд.</p>
+
+<pre><code>#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+
+// Объявление дисплея с адресом 0x3C (стандартный адрес SSD1306)
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+
+void setup() {
+  Serial.begin(115200);
+
+  // Инициализация дисплея
+  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println(F("SSD1306 allocation failed"));
+    for(;;); // Зацикливаемся при ошибке
+  }
+
+  // Очистка буфера
+  display.clearDisplay();
+  
+  // Настройка текста
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor(0, 0);
+  
+  display.println("Hello, ESP8266!");
+  display.println("OLED Test 128x64");
+  display.println("----------------");
+  display.print("IP: 192.168.1.100");
+  
+  display.display(); // Отправка буфера на экран
+  delay(2000);
+}
+
+void loop() {
+  display.clearDisplay();
+  
+  display.setTextSize(2);
+  display.setCursor(0, 10);
+  display.print("Time: ");
+  
+  display.setTextSize(3);
+  display.setCursor(0, 35);
+  display.print(millis() / 1000);
+  
+  display.drawRect(0, 0, 128, 64, WHITE); // Рамка
+  
+  display.display();
+  delay(1000);
+}</code></pre>
+
+            <h3>Разбор основных команд:</h3>
+            <ul>
+                <li><code>display.begin(...)</code>: Инициализирует дисплей. Адрес <code>0x3C</code> является стандартным. Если не работает, попробуйте <code>0x3D</code>.</li>
+                <li><code>display.clearDisplay()</code>: Очищает виртуальный буфер (не забудьте вызвать <code>display.display()</code> после рисования, чтобы изменения появились на экране).</li>
+                <li><code>display.setTextSize(n)</code>: Устанавливает размер шрифта (1 — базовый, 2 — в два раза больше и т.д.).</li>
+                <li><code>display.setCursor(x, y)</code>: Устанавливает курсор в координаты X, Y (0,0 — левый верхний угол).</li>
+                <li><code>display.display()</code>: Критически важная функция! Переносит содержимое буфера на физический экран.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Возможные проблемы</h2>
+            <ul>
+                <li><strong>Экран черный / мусор</strong>:
+                    <ul>
+                        <li>Проверьте подключение проводов SDA и SCL (не перепутаны ли они).</li>
+                        <li>Убедитесь, что в коде указан правильный адрес (<code>0x3C</code> или <code>0x3D</code>). Узнать адрес можно с помощью сканера I2C.</li>
+                        <li>Проверьте, закомментировано/раскомментировано ли правильное разрешение в библиотеке.</li>
+                    </ul>
+                </li>
+                <li><strong>Текст не виден</strong>: Возможно, цвет текста установлен в BLACK на черном фоне. Используйте константу <code>WHITE</code> (или <code>INVERSE</code> для инверсии).</li>
+                <li><strong>Артефакты на экране</strong>: Попробуйте добавить конденсатор 10мкФ между VCC и GND рядом с дисплеем для стабилизации питания.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Применение в проектах</h2>
+        <p>OLED-дисплей отлично подходит для:</p>
+        <ul>
+            <li>Отображения показаний датчиков (температура, влажность, давление) в реальном времени.</li>
+            <li>Создания меню навигации для умного дома.</li>
+            <li>Визуализации графиков и диаграмм.</li>
+            <li>Отображения статуса Wi-Fi соединения и IP-адреса при старте устройства.</li>
+        </ul>
+        </section>
+
+        <section>
+            <h2>Заключение</h2>
+            <p>Подключение OLED-дисплея 128×64 к ESP8266 — задача несложная, но открывающая огромные возможности для визуализации данных. Благодаря библиотеке Adafruit, управление графикой становится интуитивно понятным даже для новичков.</p>
+        </section>
+
+    </article>
+
+    <footer>
+        <p>&copy; 2026 ESP8266 Electronics Lab. Статья основана на материалах psseven.ru</p>
+        <p style="font-size: 0.8em; margin-top: 10px; opacity: 0.6;">Made with ❤️ and ⚡</p>
+    </footer>
+
+</body>
+</html>

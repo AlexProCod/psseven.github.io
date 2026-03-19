@@ -3,325 +3,310 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Подключение RFID-модуля RC522 к ESP8266</title>
+    <title>ESP8266 Projects Hub</title>
+    <!-- Подключаем шрифт в техническом стиле -->
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #fff;
+        :root {
+            --bg-color: #0d1117;
+            --card-bg: #161b22;
+            --text-main: #c9d1d9;
+            --accent-green: #2ea043; /* Паяльный флюс / Материнская плата */
+            --accent-blue: #58a6ff;  /* Светодиоды */
+            --accent-glow: rgba(46, 160, 67, 0.4);
+            --border-color: #30363d;
+            --hover-bg: #21262d;
         }
-        h1 {
-            color: #2c3e50;
-            border-bottom: 3px solid #3498db;
-            padding-bottom: 10px;
-        }
-        h2 {
-            color: #2980b9;
-            margin-top: 30px;
-        }
-        h3 {
-            color: #16a085;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        th, td {
-            padding: 12px 15px;
-            border: 1px solid #ddd;
-            text-align: left;
-        }
-        th {
-            background-color: #3498db;
-            color: white;
-            font-weight: 600;
-        }
-        tr:nth-child(even) {
-            background-color: #f8f9fa;
-        }
-        code {
-            background-color: #f4f4f4;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-family: 'Courier New', monospace;
-            color: #e74c3c;
-        }
-        pre {
-            background-color: #2d2d2d;
-            color: #f8f8f2;
-            padding: 20px;
-            border-radius: 5px;
-            overflow-x: auto;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-        }
-        pre code {
-            background: none;
-            color: inherit;
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
             padding: 0;
         }
-        ul {
-            padding-left: 20px;
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            background-image: 
+                linear-gradient(rgba(13, 17, 23, 0.95), rgba(13, 17, 23, 0.95)),
+                url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%232ea043' fill-opacity='0.05' fill-rule='evenodd'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E");
+            min-height: 100vh;
         }
-        li {
-            margin: 8px 0;
-        }
-        .note {
-            background-color: #fff3cd;
-            border-left: 4px solid #ffc107;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 0 4px 4px 0;
-        }
-        .warning {
-            background-color: #f8d7da;
-            border-left: 4px solid #dc3545;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 0 4px 4px 0;
-        }
-        a {
-            color: #3498db;
-            text-decoration: none;
-        }
-        a:hover {
-            text-decoration: underline;
-        }
-        .video-section {
-            background-color: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            margin: 25px 0;
+
+        header {
             text-align: center;
+            padding: 40px 20px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 40px;
+            background: radial-gradient(circle at center, #1f2937 0%, var(--bg-color) 100%);
         }
+
+        h1 {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 2.5rem;
+            color: var(--accent-green);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px var(--accent-glow);
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: var(--accent-blue);
+            font-size: 1.1rem;
+            opacity: 0.8;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px 60px;
+        }
+
+        /* Сетка для карточек */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        /* Стиль карточки */
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* Декоративная линия сверху карточки */
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-green), var(--accent-blue));
+            opacity: 0.7;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5), 0 0 15px var(--accent-glow);
+            border-color: var(--accent-green);
+        }
+
+        .card-icon {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            color: var(--accent-blue);
+        }
+
+        .card-title {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+
+        .card-desc {
+            font-size: 0.9rem;
+            color: #8b949e;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            display: inline-block;
+            background-color: transparent;
+            border: 1px solid var(--accent-green);
+            color: var(--accent-green);
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.9rem;
+            text-align: center;
+            transition: all 0.2s;
+            align-self: flex-start;
+        }
+
+        .card:hover .btn {
+            background-color: var(--accent-green);
+            color: #fff;
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        /* Особый стиль для больших проектов (последние два) */
+        .card.project-large {
+            grid-column: span 1;
+            border-left: 4px solid var(--accent-blue);
+        }
+        
+        @media (min-width: 768px) {
+            .card.project-large {
+                grid-column: span 2; /* На больших экранах занимают 2 колонки */
+            }
+        }
+
+        .project-large .card-title {
+            color: var(--accent-blue);
+            font-size: 1.4rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px;
+            color: #484f58;
+            font-size: 0.9rem;
+            border-top: 1px solid var(--border-color);
+            margin-top: 40px;
+        }
+
+        /* Анимация мигания курсора */
+        .cursor::after {
+            content: '_';
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
     </style>
 </head>
 <body>
-    <article>
-        <header>
-            <h1>Подключение RFID-модуля RC522 к ESP8266</h1>
-        </header>
 
-        <p><strong>RFID-модуль RC522</strong> — это популярное и доступное решение для чтения и записи RFID-меток и карт, работающих на частоте <strong>13.56 МГц</strong>. В сочетании с микроконтроллером ESP8266, обладающим поддержкой Wi-Fi, вы можете создавать проекты, такие как системы контроля доступа, умные замки или системы учета. В этой статье мы подробно рассмотрим, как подключить RFID-модуль RC522 к ESP8266, настроить программное обеспечение и написать базовый код для чтения идентификаторов RFID-меток.</p>
+    <header>
+        <h1>PS Electronic <span class="cursor">LAB</span></h1>
+        <div class="subtitle">База знаний по подключению датчиков и модулей</div>
+    </header>
 
-        <h2>Что вам понадобится</h2>
-        <p>Для выполнения этого проекта вам потребуются следующие компоненты:</p>
-        <ul>
-            <li>Микроконтроллер ESP8266 (например, NodeMCU или Wemos D1 Mini).</li>
-            <li>RFID-модуль RC522 с поддержкой интерфейса SPI.</li>
-            <li>RFID-метки или карты (обычно поставляются вместе с модулем RC522).</li>
-            <li>Соединительные провода.</li>
-            <li>Макетная плата (для удобства прототипирования).</li>
-            <li>Компьютер с установленной средой разработки Arduino IDE.</li>
-            <li>USB-кабель для подключения ESP8266 к компьютеру.</li>
-        </ul>
+    <div class="container">
+        <div class="grid">
+            
+            <!-- 1. RFID -->
+            <a href="rfid_esp.html" class="card">
+                <div class="card-icon">📡</div>
+                <div class="card-title">RFID-модуль RC522</div>
+                <div class="card-desc">Подключение и чтение карт доступа через SPI интерфейс.</div>
+                <span class="btn">Открыть схему</span>
+            </a>
 
-        <h2>Подключение RC522 к ESP8266</h2>
-        <p>RFID-модуль RC522 использует интерфейс SPI для связи с микроконтроллером. Ниже приведена таблица с распиновкой для подключения RC522 к ESP8266 (на примере NodeMCU):</p>
+            <!-- 2. Ток -->
+            <a href="acs712.html" class="card">
+                <div class="card-icon">⚡</div>
+                <div class="card-title">Датчик тока ACS712</div>
+                <div class="card-desc">Измерение силы тока в цепях переменного и постоянного напряжения.</div>
+                <span class="btn">Открыть схему</span>
+            </a>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>Пин RC522</th>
-                    <th>Пин ESP8266 (NodeMCU)</th>
-                    <th>Описание</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td><strong>SDA</strong></td>
-                    <td>D8 (GPIO15)</td>
-                    <td>Chip Select (SS)</td>
-                </tr>
-                <tr>
-                    <td><strong>SCK</strong></td>
-                    <td>D5 (GPIO14)</td>
-                    <td>Serial Clock</td>
-                </tr>
-                <tr>
-                    <td><strong>MOSI</strong></td>
-                    <td>D7 (GPIO13)</td>
-                    <td>Master Out Slave In</td>
-                </tr>
-                <tr>
-                    <td><strong>MISO</strong></td>
-                    <td>D6 (GPIO12)</td>
-                    <td>Master In Slave Out</td>
-                </tr>
-                <tr>
-                    <td><strong>IRQ</strong></td>
-                    <td>Не подключается</td>
-                    <td>Interrupt (не используется)</td>
-                </tr>
-                <tr>
-                    <td><strong>GND</strong></td>
-                    <td>GND</td>
-                    <td>Земля</td>
-                </tr>
-                <tr>
-                    <td><strong>RST</strong></td>
-                    <td>D3 (GPIO0)</td>
-                    <td>Reset</td>
-                </tr>
-                <tr>
-                    <td><strong>3.3V</strong></td>
-                    <td>3V3</td>
-                    <td>Питание 3.3 В</td>
-                </tr>
-            </tbody>
-        </table>
+            <!-- 3. Газ -->
+            <a href="mq135.html" class="card">
+                <div class="card-icon">☁️</div>
+                <div class="card-title">Датчик газа MQ135</div>
+                <div class="card-desc">Мониторинг качества воздуха и обнаружение вредных газов.</div>
+                <span class="btn">Открыть схему</span>
+            </a>
 
-        <h3>Схема подключения</h3>
-        <ol>
-            <li>Подключите <strong>SDA</strong> (SS) модуля RC522 к пину <strong>D8</strong> (GPIO15) на ESP8266.</li>
-            <li>Подключите <strong>SCK</strong> к пину <strong>D5</strong> (GPIO14).</li>
-            <li>Подключите <strong>MOSI</strong> к пину <strong>D7</strong> (GPIO13).</li>
-            <li>Подключите <strong>MISO</strong> к пину <strong>D6</strong> (GPIO12).</li>
-            <li>Подключите <strong>RST</strong> к пину <strong>D3</strong> (GPIO0).</li>
-            <li>Подключите <strong>GND</strong> модуля к <strong>GND</strong> на ESP8266.</li>
-            <li>Подключите <strong>3.3V</strong> модуля к пину <strong>3V3</strong> на ESP8266.</li>
-            <li>Пин <strong>IRQ</strong> оставьте неподключенным, так как он не используется в данном примере.</li>
-        </ol>
+            <!-- 4. Движение -->
+            <a href="am312.html" class="card">
+                <div class="card-icon">🏃</div>
+                <div class="card-title">Датчик движения AM312</div>
+                <div class="card-desc">Компактный пироэлектрический сенсор для детекции перемещений.</div>
+                <span class="btn">Открыть схему</span>
+            </a>
 
-        <div class="warning">
-            <strong>Примечание:</strong> RC522 работает от напряжения 3.3 В. Подключение к 5 В может повредить модуль, поэтому используйте только 3.3 В с ESP8266.
+            <!-- 5. Температура 18B20 -->
+            <a href="ds18b12.html" class="card">
+                <div class="card-icon">🌡️</div>
+                <div class="card-title">Температура DS18B20</div>
+                <div class="card-desc">Цифровой водонепроницаемый датчик с интерфейсом 1-Wire.</div>
+                <span class="btn">Открыть схему</span>
+            </a>
+
+            <!-- 6. Звук -->
+            <a href="ky038.html" class="card">
+                <div class="card-icon">🎤</div>
+                <div class="card-title">Звуковой датчик KY-038</div>
+                <div class="card-desc">Реагирование на уровень шума и хлопки.</div>
+                <span class="btn">Открыть схему</span>
+            </a>
+
+            <!-- 7. Свет -->
+            <a href="gl5516" class="card">
+                <div class="card-icon">💡</div>
+                <div class="card-title">Фоторезистор GL5516</div>
+                <div class="card-desc">Измерение уровня освещенности для систем умного света.</div>
+                <span class="btn">Открыть схему</span>
+            </a>
+
+            <!-- 8. OLED -->
+            <a href="ssd1306.html" class="card">
+                <div class="card-icon">🖥️</div>
+                <div class="card-title">OLED-дисплей 128×64</div>
+                <div class="card-desc">Вывод графической информации через интерфейс I2C.</div>
+                <span class="btn">Открыть схему</span>
+            </a>
+
+            <!-- 9. Геркон -->
+            <a href="gercon.html" class="card">
+                <div class="card-icon">🧲</div>
+                <div class="card-title">Магнитный геркон</div>
+                <div class="card-desc">Контроль открытия дверей и окон в системах безопасности.</div>
+                <span class="btn">Открыть схему</span>
+            </a>
+
+            <!-- 10. DHT11 -->
+            <a href="dht11" class="card">
+                <div class="card-icon">💧</div>
+                <div class="card-title">DHT11 (Темп. + Влаж.)</div>
+                <div class="card-desc">Базовый сенсор для мониторинга микроклимата в помещении.</div>
+                <span class="btn">Открыть схему</span>
+            </a>
+
+            <!-- 11. ADS1115 -->
+            <a href="ads1115.html" class="card">
+                <div class="card-icon">📊</div>
+                <div class="card-title">Внешний АЦП ADS1115</div>
+                <div class="card-desc">Прецизионное аналого-цифровое преобразование через I2C.</div>
+                <span class="btn">Открыть схему</span>
+            </a>
+
+            <!-- 12. Система мониторинга (Большая) -->
+            <a href="monitoring-system.html" class="card project-large">
+                <div class="card-icon">🛰️</div>
+                <div class="card-title">Система мониторинга на ESP8266</div>
+                <div class="card-desc">Комплексный проект: сбор данных с OLED-дисплея, датчиков движения, температуры и геркона в едином устройстве.</div>
+                <span class="btn">Смотреть проект</span>
+            </a>
+
+            <!-- 13. Умный дом (Большая) -->
+            <a href="smart-home-telegram.html" class="card project-large">
+                <div class="card-icon">🏠</div>
+                <div class="card-title">Умный дом с уведомлениями в Telegram</div>
+                <div class="card-desc">Полноценная система безопасности: мониторинг двери, движения и температуры с мгновенными оповещениями в мессенджер.</div>
+                <span class="btn">Смотреть проект</span>
+            </a>
+
         </div>
+    </div>
 
-        <h2>Настройка Arduino IDE</h2>
-        <p>Для работы с RC522 нам понадобится библиотека <code>MFRC522</code>. Следуйте этим шагам для настройки среды:</p>
-        <ol>
-            <li><strong>Установите Arduino IDE</strong>, если она еще не установлена. Скачать можно с официального сайта.</li>
-            <li><strong>Добавьте поддержку ESP8266</strong>:
-                <ul>
-                    <li>Откройте Arduino IDE, перейдите в <strong>File &gt; Preferences</strong>.</li>
-                    <li>В поле «Additional Boards Manager URLs» добавьте:<br>
-                        <code>http://arduino.esp8266.com/stable/package_esp8266com_index.json</code>
-                    </li>
-                    <li>Перейдите в <strong>Tools &gt; Board &gt; Boards Manager</strong>, найдите «esp8266» и установите платформу.</li>
-                </ul>
-            </li>
-            <li><strong>Установите библиотеку MFRC522</strong>:
-                <ul>
-                    <li>Перейдите в <strong>Sketch &gt; Include Library &gt; Manage Libraries</strong>.</li>
-                    <li>Найдите «MFRC522» (автор: Miguel Balboa) и установите последнюю версию.</li>
-                </ul>
-            </li>
-            <li><strong>Выберите плату</strong>:
-                <ul>
-                    <li>В меню <strong>Tools &gt; Board</strong> выберите вашу плату (например, «NodeMCU 1.0 (ESP-12E Module)»).</li>
-                    <li>Укажите порт в <strong>Tools &gt; Port</strong>.</li>
-                </ul>
-            </li>
-        </ol>
-
-        <h2>Пример кода</h2>
-        <p>Ниже приведен пример кода для чтения UID (уникального идентификатора) RFID-метки с помощью RC522 и ESP8266:</p>
-
-        <pre><code>#include &lt;SPI.h&gt;
-#include &lt;MFRC522.h&gt;
-
-#define RST_PIN D3  // Пин RST
-#define SS_PIN  D8  // Пин SDA (SS)
-
-MFRC522 rfid(SS_PIN, RST_PIN);  // Создаем объект MFRC522
-
-void setup() {
-  Serial.begin(115200);  // Инициализация Serial
-  SPI.begin();           // Инициализация SPI
-  rfid.PCD_Init();       // Инициализация RC522
-  Serial.println("Приложите RFID-метку к считывателю...");
-}
-
-void loop() {
-  // Проверяем наличие новой метки
-  if (rfid.PICC_IsNewCardPresent() && rfid.PICC_ReadCardSerial()) {
-    Serial.print("UID метки: ");
-    for (byte i = 0; i &lt; rfid.uid.size; i++) {
-      Serial.print(rfid.uid.uidByte[i] &lt; 0x10 ? " 0" : " ");
-      Serial.print(rfid.uid.uidByte[i], HEX);
-    }
-    Serial.println();
-    rfid.PICC_HaltA();  // Останавливаем чтение
-  }
-  delay(100);
-}</code></pre>
-
-        <h3>Объяснение кода</h3>
-        <ol>
-            <li><strong>Библиотеки</strong>: Подключаем библиотеки <code>SPI</code> для работы с интерфейсом SPI и <code>MFRC522</code> для взаимодействия с модулем RC522.</li>
-            <li><strong>Пины</strong>: Определяем пины <code>RST_PIN</code> и <code>SS_PIN</code> для связи с RC522.</li>
-            <li><strong>Инициализация</strong>:
-                <ul>
-                    <li><code>Serial.begin(115200)</code> — запускает последовательный порт для вывода данных.</li>
-                    <li><code>SPI.begin()</code> — инициализирует SPI.</li>
-                    <li><code>rfid.PCD_Init()</code> — инициализирует модуль RC522.</li>
-                </ul>
-            </li>
-            <li><strong>Чтение метки</strong>:
-                <ul>
-                    <li><code>rfid.PICC_IsNewCardPresent()</code> проверяет наличие новой метки.</li>
-                    <li><code>rfid.PICC_ReadCardSerial()</code> считывает данные метки.</li>
-                    <li>Цикл <code>for</code> выводит UID метки в шестнадцатеричном формате.</li>
-                </ul>
-            </li>
-            <li><strong>Остановка</strong>: <code>rfid.PICC_HaltA()</code> завершает чтение текущей метки.</li>
-        </ol>
-
-        <h2>Тестирование</h2>
-        <ol>
-            <li>Загрузите код в ESP8266, подключив его к компьютеру через USB.</li>
-            <li>Откройте <strong>Serial Monitor</strong> в Arduino IDE (установите скорость 115200).</li>
-            <li>Приложите RFID-метку или карту к модулю RC522.</li>
-            <li>В Serial Monitor вы увидите UID метки, например: <code>UID метки: A1 B2 C3 D4</code>.</li>
-        </ol>
-
-        <h2>Возможные проблемы и их решения</h2>
-        <ul>
-            <li><strong>Модуль не читает метки</strong>:
-                <ul>
-                    <li>Проверьте правильность подключения проводов.</li>
-                    <li>Убедитесь, что модуль питается от 3.3 В.</li>
-                    <li>Попробуйте другую метку или карту.</li>
-                </ul>
-            </li>
-            <li><strong>Ошибки SPI</strong>:
-                <ul>
-                    <li>Убедитесь, что пины SPI (D5, D6, D7, D8) не используются другими устройствами.</li>
-                </ul>
-            </li>
-            <li><strong>ESP8266 не подключается к Arduino IDE</strong>:
-                <ul>
-                    <li>Проверьте драйверы USB (например, CH340/CH341 для NodeMCU).</li>
-                    <li>Убедитесь, что выбран правильный порт и плата.</li>
-                </ul>
-            </li>
-        </ul>
-
-        <h2>Расширение проекта</h2>
-        <p>После успешного чтения UID метки вы можете расширить проект следующими способами:</p>
-        <ul>
-            <li><strong>Передача данных по Wi-Fi</strong>: Используйте библиотеку <code>ESP8266WiFi</code> для отправки UID на сервер или в облако.</li>
-            <li><strong>Контроль доступа</strong>: Добавьте реле для управления замком, проверяя UID метки в списке разрешенных.</li>
-            <li><strong>Логирование</strong>: Сохраняйте данные о сканировании меток в базе данных или на SD-карте (с дополнительным модулем).</li>
-        </ul>
-
-        <h2>Заключение</h2>
-        <p>Подключение RFID-модуля RC522 к ESP8266 — это простой и эффективный способ создать проект с использованием RFID-технологий. С помощью приведенного кода и схемы подключения вы можете быстро начать считывать RFID-метки и интегрировать их в свои IoT-проекты. В следующих разделах руководства мы рассмотрим, как добавить Wi-Fi-функциональность и интегрировать другие датчики для создания более сложных систем.</p>
-
-        <div class="video-section">
-            <h3>📺 Видеоинструкция</h3>
-            <p><a href="https://www.youtube.com/watch?v=0yxCbzMoYLI" target="_blank">Смотреть видео на YouTube</a></p>
-        </div>
-    </article>
-
-    <footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 14px;">
-        
+    <footer>
+        <p>&copy; 2026 ESP8266 Electronics Lab. Все права защищены.</p>
+        <p style="font-size: 0.8em; margin-top: 10px; color: #30363d;">Made with ❤️ and ⚡</p>
     </footer>
+
 </body>
 </html>

@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Подключение датчика DHT11/DHT22 к ESP8266</title>
+    <!-- Шрифты в техническом стиле -->
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --card-bg: #161b22;
+            --text-main: #c9d1d9;
+            --text-muted: #8b949e;
+            --accent-green: #2ea043;
+            --accent-blue: #58a6ff;
+            --accent-red: #da3633;
+            --accent-yellow: #d29922;
+            --border-color: #30363d;
+            --code-bg: #0d1117;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.7;
+            background-image: 
+                linear-gradient(rgba(13, 17, 23, 0.95), rgba(13, 17, 23, 0.95)),
+                url("image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%232ea043' fill-opacity='0.05' fill-rule='evenodd'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        /* Навигация */
+        .nav-bar {
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--accent-green);
+            font-size: 1.5rem;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .back-btn {
+            color: var(--accent-blue);
+            text-decoration: none;
+            font-family: 'Share Tech Mono', monospace;
+            border: 1px solid var(--accent-blue);
+            padding: 5px 15px;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background-color: var(--accent-blue);
+            color: #fff;
+            box-shadow: 0 0 10px rgba(88, 166, 255, 0.4);
+        }
+
+        /* Контент статьи */
+        .article-container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px 60px;
+        }
+
+        header.article-header {
+            margin-bottom: 40px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 20px;
+        }
+
+        h1 {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 2.2rem;
+            color: #fff;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        h1 span {
+            color: var(--accent-green);
+        }
+
+        .intro {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--accent-blue);
+            margin-top: 40px;
+            margin-bottom: 20px;
+            font-size: 1.6rem;
+            border-left: 4px solid var(--accent-blue);
+            padding-left: 15px;
+        }
+
+        h3 {
+            color: var(--text-main);
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        p {
+            margin-bottom: 15px;
+        }
+
+        ul, ol {
+            margin-bottom: 20px;
+            padding-left: 25px;
+        }
+
+        li {
+            margin-bottom: 10px;
+            color: var(--text-main);
+        }
+
+        strong {
+            color: #fff;
+        }
+
+        /* Таблица */
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 25px 0;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: var(--card-bg);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.95rem;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: rgba(46, 160, 67, 0.1);
+            color: var(--accent-green);
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        /* Сравнение */
+        .comparison-box {
+            background-color: rgba(88, 166, 255, 0.05);
+            border: 1px solid var(--accent-blue);
+            border-radius: 6px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+
+        .comparison-title {
+            color: var(--accent-blue);
+            font-family: 'Share Tech Mono', monospace;
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        /* Блок кода */
+        pre {
+            background-color: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 20px;
+            overflow-x: auto;
+            margin: 25px 0;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.9rem;
+            color: #e6edf3;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        code {
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--accent-yellow);
+        }
+
+        pre code {
+            color: inherit;
+            background: none;
+            padding: 0;
+        }
+
+        /* Предупреждения */
+        .alert {
+            padding: 15px 20px;
+            border-radius: 6px;
+            margin: 25px 0;
+            border-left: 4px solid;
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        .alert-warning {
+            border-color: var(--accent-red);
+            background-color: rgba(218, 54, 51, 0.1);
+        }
+
+        .alert-info {
+            border-color: var(--accent-blue);
+            background-color: rgba(88, 166, 255, 0.1);
+        }
+
+        .alert-title {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .alert-warning .alert-title { color: var(--accent-red); }
+        .alert-info .alert-title { color: var(--accent-blue); }
+
+        /* Схема резистора */
+        .resistor-note {
+            background-color: rgba(210, 153, 34, 0.1);
+            border: 1px dashed var(--accent-yellow);
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+        }
+        
+        .resistor-icon {
+            font-size: 1.5rem;
+            color: var(--accent-yellow);
+        }
+
+        /* Ссылки в тексте */
+        a {
+            color: var(--accent-blue);
+            text-decoration: none;
+            border-bottom: 1px dotted var(--accent-blue);
+            transition: all 0.2s;
+        }
+
+        a:hover {
+            color: #fff;
+            border-bottom-style: solid;
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border-color);
+            margin-top: 60px;
+            font-size: 0.9rem;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 600px) {
+            h1 { font-size: 1.8rem; }
+            h2 { font-size: 1.4rem; }
+            .nav-container { flex-direction: column; gap: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Навигация -->
+    <nav class="nav-bar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">&lt;ESP8266_LAB /&gt;</a>
+            <a href="index.html" class="back-btn">← Назад к списку проектов</a>
+        </div>
+    </nav>
+
+    <!-- Основной контент -->
+    <article class="article-container">
+        <header class="article-header">
+            <h1>Подключение датчика <span>DHT11 / DHT22</span> к ESP8266</h1>
+            <p class="intro">
+                Датчики серии DHT (DHT11 и DHT22/AM2302) — это самые популярные цифровые сенсоры для измерения температуры и влажности в проектах на Arduino и ESP8266. Они дешевы, просты в подключении и имеют встроенный АЦП, что избавляет микроконтроллер от лишней нагрузки. В этой статье мы разберем отличия моделей, схему подключения и работу с библиотекой.
+            </p>
+        </header>
+
+        <section>
+            <h2>В чем разница: DHT11 vs DHT22?</h2>
+            <p>Внешне модули выглядят похоже (синий корпус у DHT11, белый у DHT22), но их характеристики существенно различаются.</p>
+            
+            <div class="comparison-box">
+                <span class="comparison-title">⚖️ Сравнение характеристик</span>
+                <table style="width:100%; margin:0; border:none; background:transparent;">
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <td style="border:none; padding: 5px;"><strong>Параметр</strong></td>
+                        <td style="border:none; padding: 5px; color: var(--accent-green);">DHT11 (Синий)</td>
+                        <td style="border:none; padding: 5px; color: var(--accent-blue);">DHT22 (Белый)</td>
+                    </tr>
+                    <tr>
+                        <td style="border:none; padding: 5px;">Температура</td>
+                        <td style="border:none; padding: 5px;">0...50°C (±2°C)</td>
+                        <td style="border:none; padding: 5px;">-40...80°C (±0.5°C)</td>
+                    </tr>
+                    <tr>
+                        <td style="border:none; padding: 5px;">Влажность</td>
+                        <td style="border:none; padding: 5px;">20...90% (±5%)</td>
+                        <td style="border:none; padding: 5px;">0...100% (±2-5%)</td>
+                    </tr>
+                    <tr>
+                        <td style="border:none; padding: 5px;">Частота опроса</td>
+                        <td style="border:none; padding: 5px;">1 раз в секунду</td>
+                        <td style="border:none; padding: 5px;">1 раз в 2 секунды</td>
+                    </tr>
+                    <tr>
+                        <td style="border:none; padding: 5px;">Цена</td>
+                        <td style="border:none; padding: 5px;">Дешевле</td>
+                        <td style="border:none; padding: 5px;">Немного дороже</td>
+                    </tr>
+                </table>
+            </div>
+            <p><strong>Рекомендация:</strong> Для уличных метеостанций и точных измерений однозначно выбирайте <strong>DHT22</strong>. DHT11 подойдет для простых учебных проектов или контроля климата в помещении, где не нужна высокая точность.</p>
+        </section>
+
+        <section>
+            <h2>Что вам понадобится</h2>
+            <ul>
+                <li>Микроконтроллер ESP8266 (NodeMCU, Wemos D1 Mini).</li>
+                <li>Датчик DHT11 или DHT22 (в виде модуля с платой или отдельный компонент).</li>
+                <li>Резистор <strong>10 кОм</strong> (нужен только для голого датчика без платы).</li>
+                <li>Соединительные провода.</li>
+                <li>Компьютер с Arduino IDE.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Схема подключения</h2>
+            <p>Здесь важно различать два варианта исполнения датчика:</p>
+            
+            <h3>Вариант 1: Модуль с платой (3 контакта)</h3>
+            <p>Если у вас датчик уже припаян к маленькой плате с надписью DHT11/DHT22 и тремя пинами, то подтягивающий резистор уже установлен на плате. Подключать просто:</p>
+            <ul>
+                <li><strong>VCC</strong> → 3V3 (или 5V)</li>
+                <li><strong>GND</strong> → GND</li>
+                <li><strong>DATA</strong> → Любой GPIO (например, D4)</li>
+            </ul>
+
+            <h3>Вариант 2: Голый датчик (4 контакта)</h3>
+            <p>Если вы купили отдельный компонент в пластиковом корпусе с 4 ножками, вам <strong>обязательно</strong> нужен подтягивающий резистор.</p>
+            
+            <div class="resistor-note">
+                <div class="resistor-icon">⚡</div>
+                <div>
+                    <strong>❗ Важно: Подтягивающий резистор</strong><br>
+                    Между пином <strong>VCC</strong> и пином <strong>DATA</strong> необходимо подключить резистор номиналом <strong>10 кОм</strong>. Без него связь с датчиком будет нестабильной.
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Пин датчика (слева направо)</th>
+                            <th>Назначение</th>
+                            <th>Подключение к ESP8266</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>1</strong></td>
+                            <td>VCC (Питание)</td>
+                            <td>3V3 (или 5V)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>2</strong></td>
+                            <td>DATA (Данные)</td>
+                            <td>GPIO (напр. D4) + Резистор 10к к VCC</td>
+                        </tr>
+                        <tr>
+                            <td><strong>3</strong></td>
+                            <td>NC (Не подключать)</td>
+                            <td>Оставить висеть в воздухе</td>
+                        </tr>
+                        <tr>
+                            <td><strong>4</strong></td>
+                            <td>GND (Земля)</td>
+                            <td>GND</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section>
+            <h2>Настройка Arduino IDE</h2>
+            <p>Для работы с датчиками DHT необходима библиотека от Adafruit. Установите две библиотеки через <strong>Sketch > Include Library > Manage Libraries</strong>:</p>
+            <ol>
+                <li><strong>DHT sensor library</strong> (автор: Adafruit).</li>
+                <li><strong>Adafruit Unified Sensor</strong> (зависимость, установится автоматически или найдите отдельно).</li>
+            </ol>
+        </section>
+
+        <section>
+            <h2>Пример кода</h2>
+            <p>Универсальный скетч, который работает и с DHT11, и с DHT22. Нужно лишь раскомментировать нужную строку в начале кода.</p>
+
+<pre><code>#include <DHT.h>
+
+// НАСТРОЙКИ
+#define DHTPIN D4     // Пин, к которому подключен DATA
+//#define DHTTYPE DHT11   // Раскомментируйте для DHT11
+#define DHTTYPE DHT22   // Раскомментируйте для DHT22
+
+DHT dht(DHTPIN, DHTTYPE);
+
+void setup() {
+  Serial.begin(115200);
+  Serial.println("Запуск датчика DHT...");
+  dht.begin();
+}
+
+void loop() {
+  delay(2000); // Задержка между измерениями (минимум 2 сек для DHT22)
+
+  // Считывание влажности
+  float h = dht.readHumidity();
+  // Считывание температуры в Цельсиях
+  float t = dht.readTemperature();
+  // Считывание температуры в Фаренгейтах
+  float f = dht.readTemperature(true);
+
+  // Проверка на ошибки чтения
+  if (isnan(h) || isnan(t) || isnan(f)) {
+    Serial.println("Ошибка чтения данных с датчика DHT!");
+    return;
+  }
+
+  // Вычисление индекса жары (теплоощущение)
+  float hif = dht.computeHeatIndex(f, h);
+  // Или в Цельсиях
+  float hic = dht.computeHeatIndex(t, h, false);
+
+  Serial.print("Влажность: ");
+  Serial.print(h);
+  Serial.print("% | Температура: ");
+  Serial.print(t);
+  Serial.print(" °C | Теплоощущение: ");
+  Serial.print(hic);
+  Serial.println(" °C");
+}</code></pre>
+
+            <div class="alert alert-info">
+                <span class="alert-title">💡 Важные нюансы кода</span>
+                <ul>
+                    <li><strong>Задержка:</strong> Обязательно делайте паузу <code>delay(2000)</code> или больше между запросами. Датчик медленный и не успеет обновить данные при частых опросах.</li>
+                    <li><strong>Проверкаisnan():</strong> Функция <code>read...</code> может вернуть <code>NaN</code> (Not a Number), если чтение не удалось. Всегда проверяйте это перед использованием данных.</li>
+                    <li><strong>Питание:</strong> Если датчик работает нестабильно, попробуйте подать на VCC 5В вместо 3.3В (датчик допускает 3-6В), но сигнальный пин DATA оставьте на 3.3В логике ESP8266.</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h2>Возможные проблемы</h2>
+            <ul>
+                <li><strong>Чтение возвращает NaN</strong>:
+                    <ul>
+                        <li>Проверьте наличие подтягивающего резистора 10 кОм (если используете голый датчик).</li>
+                        <li>Убедитесь, что выбран правильный тип датчика в коде (DHT11 или DHT22).</li>
+                        <li>Проверьте надежность контактов.</li>
+                    </ul>
+                </li>
+                <li><strong>Данные не обновляются</strong>: Вы делаете опрос слишком часто. Увеличьте интервал в <code>loop()</code> до 2000 мс.</li>
+                <li><strong>Неверные показания влажности</strong>: Держите датчик подальше от источников тепла (сам ESP8266 может нагреваться) и влаги. Обеспечьте циркуляцию воздуха вокруг сенсора.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Применение в умном доме</h2>
+            <p>Датчики DHT идеально подходят для:</p>
+            <ul>
+                <li>Мониторинга микроклимата в комнате с выводом данных на OLED-дисплей или в Telegram.</li>
+                <li>Управления увлажнителем воздуха или осушителем по пороговым значениям.</li>
+                <li>Контроля условий в теплице или инкубаторе.</li>
+                <li>Ведения логов погоды на домашнем сервере (Home Assistant, Domoticz).</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Заключение</h2>
+            <p>DHT11 и DHT22 — это «рабочие лошадки» мира любительской электроники. Несмотря на появление более точных сенсоров (типа BME280), они остаются популярными благодаря своей дешевизне и простоте. Правильное подключение подтягивающего резистора и соблюдение временных интервалов опроса гарантируют стабильную работу вашего проекта.</p>
+        </section>
+
+    </article>
+
+    <footer>
+        <p>&copy; 2026 ESP8266 Electronics Lab. Статья основана на материалах psseven.ru</p>
+        <p style="font-size: 0.8em; margin-top: 10px; opacity: 0.6;">Made with ❤️ and ⚡</p>
+    </footer>
+
+</body>
+</html>

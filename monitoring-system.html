@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Система мониторинга на ESP8266 с OLED и датчиками</title>
+    <!-- Шрифты в техническом стиле -->
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --card-bg: #161b22;
+            --text-main: #c9d1d9;
+            --text-muted: #8b949e;
+            --accent-green: #2ea043;
+            --accent-blue: #58a6ff;
+            --accent-red: #da3633;
+            --accent-yellow: #d29922;
+            --border-color: #30363d;
+            --code-bg: #0d1117;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.7;
+            background-image: 
+                linear-gradient(rgba(13, 17, 23, 0.95), rgba(13, 17, 23, 0.95)),
+                url("image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%232ea043' fill-opacity='0.05' fill-rule='evenodd'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        /* Навигация */
+        .nav-bar {
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--accent-green);
+            font-size: 1.5rem;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .back-btn {
+            color: var(--accent-blue);
+            text-decoration: none;
+            font-family: 'Share Tech Mono', monospace;
+            border: 1px solid var(--accent-blue);
+            padding: 5px 15px;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background-color: var(--accent-blue);
+            color: #fff;
+            box-shadow: 0 0 10px rgba(88, 166, 255, 0.4);
+        }
+
+        /* Контент статьи */
+        .article-container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px 60px;
+        }
+
+        header.article-header {
+            margin-bottom: 40px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 20px;
+        }
+
+        h1 {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 2.2rem;
+            color: #fff;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        h1 span {
+            color: var(--accent-green);
+        }
+
+        .intro {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--accent-blue);
+            margin-top: 40px;
+            margin-bottom: 20px;
+            font-size: 1.6rem;
+            border-left: 4px solid var(--accent-blue);
+            padding-left: 15px;
+        }
+
+        h3 {
+            color: var(--text-main);
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        p {
+            margin-bottom: 15px;
+        }
+
+        ul, ol {
+            margin-bottom: 20px;
+            padding-left: 25px;
+        }
+
+        li {
+            margin-bottom: 10px;
+            color: var(--text-main);
+        }
+
+        strong {
+            color: #fff;
+        }
+
+        /* Таблица */
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 25px 0;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: var(--card-bg);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.95rem;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: rgba(46, 160, 67, 0.1);
+            color: var(--accent-green);
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        /* Блок кода */
+        pre {
+            background-color: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 20px;
+            overflow-x: auto;
+            margin: 25px 0;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.9rem;
+            color: #e6edf3;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        code {
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--accent-yellow);
+        }
+
+        pre code {
+            color: inherit;
+            background: none;
+            padding: 0;
+        }
+
+        /* Предупреждения */
+        .alert {
+            padding: 15px 20px;
+            border-radius: 6px;
+            margin: 25px 0;
+            border-left: 4px solid;
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        .alert-warning {
+            border-color: var(--accent-red);
+            background-color: rgba(218, 54, 51, 0.1);
+        }
+
+        .alert-info {
+            border-color: var(--accent-blue);
+            background-color: rgba(88, 166, 255, 0.1);
+        }
+
+        .alert-title {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .alert-warning .alert-title { color: var(--accent-red); }
+        .alert-info .alert-title { color: var(--accent-blue); }
+
+        /* Схема проекта */
+        .project-schema {
+            background-color: rgba(46, 160, 67, 0.05);
+            border: 1px solid var(--accent-green);
+            border-radius: 6px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+
+        .schema-title {
+            color: var(--accent-green);
+            font-family: 'Share Tech Mono', monospace;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: block;
+            text-align: center;
+            font-size: 1.2rem;
+        }
+
+        .schema-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            text-align: center;
+        }
+
+        .schema-item {
+            background: rgba(0,0,0,0.2);
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px dashed var(--border-color);
+        }
+
+        .schema-item strong {
+            display: block;
+            color: var(--accent-blue);
+            margin-bottom: 5px;
+        }
+
+        /* Ссылки в тексте */
+        a {
+            color: var(--accent-blue);
+            text-decoration: none;
+            border-bottom: 1px dotted var(--accent-blue);
+            transition: all 0.2s;
+        }
+
+        a:hover {
+            color: #fff;
+            border-bottom-style: solid;
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border-color);
+            margin-top: 60px;
+            font-size: 0.9rem;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 600px) {
+            h1 { font-size: 1.8rem; }
+            h2 { font-size: 1.4rem; }
+            .nav-container { flex-direction: column; gap: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Навигация -->
+    <nav class="nav-bar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">&lt;ESP8266_LAB /&gt;</a>
+            <a href="index.html" class="back-btn">← Назад к списку проектов</a>
+        </div>
+    </nav>
+
+    <!-- Основной контент -->
+    <article class="article-container">
+        <header class="article-header">
+            <h1>Система мониторинга на <span>ESP8266</span></h1>
+            <p class="intro">
+                В этом проекте мы объединим знания из предыдущих статей и создадим полноценную станцию мониторинга. Устройство будет отслеживать температуру, фиксировать открытие двери и обнаруживать движение, выводя всю информацию в реальном времени на OLED-дисплей. Это отличная база для создания умной системы безопасности или метеостанции.
+            </p>
+        </header>
+
+        <section>
+            <h2>Архитектура проекта</h2>
+            <p>Наша система состоит из микроконтроллера ESP8266, который опрашивает три типа датчиков и выводит данные на экран:</p>
+            
+            <div class="project-schema">
+                <span class="schema-title">📊 Структура системы</span>
+                <div class="schema-grid">
+                    <div class="schema-item">
+                        <strong>🌡️ Температура</strong>
+                        Датчик DS18B20<br>
+                        <small>Шина 1-Wire (D4)</small>
+                    </div>
+                    <div class="schema-item">
+                        <strong>🚪 Дверь</strong>
+                        Магнитный геркон<br>
+                        <small>Digital Input (D1)</small>
+                    </div>
+                    <div class="schema-item">
+                        <strong>🏃 Движение</strong>
+                        Датчик AM312<br>
+                        <small>Digital Input (D2)</small>
+                    </div>
+                    <div class="schema-item">
+                        <strong>🖥️ Дисплей</strong>
+                        OLED 128x64<br>
+                        <small>I2C (SDA-D5, SCL-D6)</small>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Необходимые компоненты</h2>
+            <ul>
+                <li>ESP8266 (NodeMCU или Wemos D1 Mini).</li>
+                <li>OLED-дисплей 0.96" I2C (SSD1306).</li>
+                <li>Цифровой датчик температуры DS18B20 + резистор 4.7 кОм.</li>
+                <li>Датчик движения AM312 (или HC-SR501).</li>
+                <li>Магнитный геркон + магнит.</li>
+                <li>Резистор 10 кОм (для геркона, если не используем INPUT_PULLUP).</li>
+                <li>Макетная плата и провода.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Схема подключения</h2>
+            <p>Так как мы используем много устройств, важно правильно распределить пины, чтобы избежать конфликтов.</p>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Устройство</th>
+                            <th>Пин ESP8266</th>
+                            <th>Примечание</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>OLED VCC</strong></td>
+                            <td>3V3</td>
+                            <td>Питание</td>
+                        </tr>
+                        <tr>
+                            <td><strong>OLED GND</strong></td>
+                            <td>GND</td>
+                            <td>Земля</td>
+                        </tr>
+                        <tr>
+                            <td><strong>OLED SCL</strong></td>
+                            <td>D1 (GPIO5)</td>
+                            <td>I2C Clock</td>
+                        </tr>
+                        <tr>
+                            <td><strong>OLED SDA</strong></td>
+                            <td>D2 (GPIO4)</td>
+                            <td>I2C Data</td>
+                        </tr>
+                        <tr>
+                            <td><strong>DS18B20 DATA</strong></td>
+                            <td>D4 (GPIO2)</td>
+                            <td>Не забудьте резистор 4.7к к 3V3!</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Геркон OUT</strong></td>
+                            <td>D5 (GPIO14)</td>
+                            <td>Режим INPUT_PULLUP</td>
+                        </tr>
+                        <tr>
+                            <td><strong>AM312 OUT</strong></td>
+                            <td>D6 (GPIO12)</td>
+                            <td>Режим INPUT</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="alert alert-warning">
+                <span class="alert-title">⚠️ Внимание по пинам</span>
+                В этой схеме мы изменили стандартные пины I2C для OLED (D1/D2), чтобы освободить место для других датчиков, либо использовали стандартные, но убедились, что они не конфликтуют. 
+                <br>В примере кода ниже используются следующие настройки:
+                <ul>
+                    <li>I2C: SDA=D2, SCL=D1 (Стандарт для многих библиотек ESP8266)</li>
+                    <li>DS18B20: D4</li>
+                    <li>Геркон: D5</li>
+                    <li>Движение: D6</li>
+                </ul>
+                Если у вас другая разводка, просто измените определения в начале кода.
+            </div>
+        </section>
+
+        <section>
+            <h2>Необходимые библиотеки</h2>
+            <p>Установите следующие библиотеки через Менеджер библиотек Arduino IDE:</p>
+            <ol>
+                <li><strong>Adafruit SSD1306</strong> и <strong>Adafruit GFX Library</strong> (для дисплея).</li>
+                <li><strong>OneWire</strong> (для шины 1-Wire).</li>
+                <li><strong>DallasTemperature</strong> (для датчика температуры).</li>
+            </ol>
+        </section>
+
+        <section>
+            <h2>Программный код</h2>
+            <p>Код опрашивает все датчики в цикле, обрабатывает события (открытие двери, движение) и обновляет дисплей. Для защиты от дребезга контактов и ложных срабатываний добавлены простые таймеры.</p>
+
+<pre><code>#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#include <OneWire.h>
+#include <DallasTemperature.h>
+
+// --- НАСТРОЙКИ ПИНОВ ---
+#define OLED_SDA D2
+#define OLED_SCL D1
+#define TEMP_PIN D4
+#define REED_PIN D5   // Геркон
+#define MOTION_PIN D6 // Движение
+
+// --- ИНИЦИАЛИЗАЦИЯ ОБЪЕКТОВ ---
+Adafruit_SSD1306 display(128, 64, &Wire, -1);
+OneWire oneWire(TEMP_PIN);
+DallasTemperature sensors(&oneWire);
+
+// --- ПЕРЕМЕННЫЕ СОСТОЯНИЯ ---
+bool doorOpen = false;
+bool motionDetected = false;
+unsigned long lastMotionTime = 0;
+float temperature = 0.0;
+
+void setup() {
+  Serial.begin(115200);
+  
+  // Настройка пинов
+  pinMode(REED_PIN, INPUT_PULLUP); // Внутренняя подтяжка для геркона
+  pinMode(MOTION_PIN, INPUT);
+  
+  // Инициализация дисплея
+  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println(F("OLED failed"));
+    for(;;);
+  }
+  display.clearDisplay();
+  display.setTextColor(WHITE);
+  display.setTextSize(1);
+  display.setCursor(0,0);
+  display.println("System Boot...");
+  display.display();
+  delay(1000);
+  
+  // Инициализация датчика температуры
+  sensors.begin();
+  
+  drawMainScreen();
+}
+
+void loop() {
+  // 1. Чтение температуры
+  sensors.requestTemperatures();
+  temperature = sensors.getTempCByIndex(0);
+  if (temperature == -127.00) temperature = -99.9; // Ошибка датчика
+
+  // 2. Чтение геркона (Дверь)
+  // LOW = замкнут (дверь закрыта), HIGH = разомкнут (дверь открыта) при INPUT_PULLUP
+  bool currentDoorState = digitalRead(REED_PIN);
+  if (currentDoorState == HIGH && !doorOpen) {
+    doorOpen = true;
+    showAlarm("DOOR OPEN!");
+  } else if (currentDoorState == LOW && doorOpen) {
+    doorOpen = false;
+    drawMainScreen();
+  }
+
+  // 3. Чтение движения
+  int motionVal = digitalRead(MOTION_PIN);
+  if (motionVal == HIGH) {
+    motionDetected = true;
+    lastMotionTime = millis();
+  }
+  // Сброс флага движения, если прошло 3 секунды без новых сигналов
+  if (motionDetected && (millis() - lastMotionTime > 3000)) {
+    motionDetected = false;
+    drawMainScreen();
+  }
+
+  // 4. Обновление дисплея, если есть активность
+  if (motionDetected || doorOpen) {
+    // Экран уже обновлен функциями showAlarm или будет обновлен ниже
+    // Для простоты в этом примере мы рисуем статус поверх основного экрана
+    updateStatusOverlay();
+  } else {
+    drawMainScreen();
+  }
+  
+  delay(500);
+}
+
+// Функция отрисовки основного экрана
+void drawMainScreen() {
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setCursor(0, 0);
+  display.println("--- MONITORING ---");
+  
+  display.setTextSize(2);
+  display.setCursor(0, 20);
+  display.print(temperature, 1);
+  display.print("*C");
+  
+  display.setTextSize(1);
+  display.setCursor(0, 45);
+  display.print("Door: ");
+  display.println(doorOpen ? "OPEN" : "Closed");
+  
+  display.setCursor(0, 55);
+  display.print("Motion: ");
+  display.println(motionDetected ? "YES" : "No");
+  
+  display.display();
+}
+
+// Функция показа тревоги на весь экран
+void showAlarm(String text) {
+  display.clearDisplay();
+  display.setTextSize(2);
+  display.setCursor(0, 20);
+  display.println(text);
+  display.display();
+}
+
+// Обновление статуса поверх основного экрана (мигание иконки)
+void updateStatusOverlay() {
+  drawMainScreen();
+  // Можно добавить мигающий символ тревоги
+  if (millis() % 1000 < 500) {
+    display.fillRect(120, 0, 8, 8, WHITE);
+    display.display();
+  }
+}</code></pre>
+
+            <h3>Как это работает:</h3>
+            <ol>
+                <li><strong>Инициализация</strong>: При старте проверяются все устройства, выводится сообщение о загрузке.</li>
+                <li><strong>Температура</strong>: Считывается каждые полсекунды и отображается крупным шрифтом.</li>
+                <li><strong>Геркон</strong>: Используется внутренняя подтяжка (<code>INPUT_PULLUP</code>). При размыкании (открытии двери) экран очищается и пишет тревогу.</li>
+                <li><strong>Движение</strong>: При обнаружении движения ставится флаг. Если в течение 3 секунд новых сигналов нет, флаг сбрасывается.</li>
+                <li><strong>Дисплей</strong>: Функция <code>drawMainScreen()</code> рисует основной интерфейс, а <code>showAlarm()</code> перекрывает его сообщением о тревоге.</li>
+            </ol>
+        </section>
+
+        <section>
+            <h2>Возможности расширения</h2>
+            <p>Этот проект — отличная основа, которую можно развивать:</p>
+            <ul>
+                <li><strong>Wi-Fi уведомления</strong>: Добавьте отправку сообщений в Telegram при открытии двери.</li>
+                <li><strong>Веб-сервер</strong>: Организуйте доступ к показаниям датчиков через браузер.</li>
+                <li><strong>Логирование</strong>: Сохраняйте историю температур и событий во внутреннюю память (SPIFFS) или на SD-карту.</li>
+                <li><strong>Сирена</strong>: Подключите активный зуммер к пину D7, чтобы система пищала при тревоге.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Заключение</h2>
+            <p>Мы успешно объединили четыре разных модуля в единую систему. ESP8266 легко справляется с одновременным опросом цифровых и однопроводных датчиков, а OLED-дисплей обеспечивает наглядную визуализацию. Такой блок можно установить на входной двери, в холодильнике или использовать как настольную метеостанцию с функцией охраны.</p>
+        </section>
+
+    </article>
+
+    <footer>
+        <p>&copy; 2026 ESP8266 Electronics Lab. Статья основана на материалах psseven.ru</p>
+        <p style="font-size: 0.8em; margin-top: 10px; opacity: 0.6;">Made with ❤️ and ⚡</p>
+    </footer>
+
+</body>
+</html>

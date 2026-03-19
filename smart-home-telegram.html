@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Умный дом на ESP8266 с уведомлениями в Telegram</title>
+    <!-- Шрифты в техническом стиле -->
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --card-bg: #161b22;
+            --text-main: #c9d1d9;
+            --text-muted: #8b949e;
+            --accent-green: #2ea043;
+            --accent-blue: #58a6ff;
+            --accent-red: #da3633;
+            --accent-yellow: #d29922;
+            --telegram-color: #24A1DE; /* Цвет Telegram */
+            --border-color: #30363d;
+            --code-bg: #0d1117;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.7;
+            background-image: 
+                linear-gradient(rgba(13, 17, 23, 0.95), rgba(13, 17, 23, 0.95)),
+                url("image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%232ea043' fill-opacity='0.05' fill-rule='evenodd'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        /* Навигация */
+        .nav-bar {
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--accent-green);
+            font-size: 1.5rem;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .back-btn {
+            color: var(--accent-blue);
+            text-decoration: none;
+            font-family: 'Share Tech Mono', monospace;
+            border: 1px solid var(--accent-blue);
+            padding: 5px 15px;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background-color: var(--accent-blue);
+            color: #fff;
+            box-shadow: 0 0 10px rgba(88, 166, 255, 0.4);
+        }
+
+        /* Контент статьи */
+        .article-container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px 60px;
+        }
+
+        header.article-header {
+            margin-bottom: 40px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 20px;
+        }
+
+        h1 {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 2.2rem;
+            color: #fff;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        h1 span {
+            color: var(--accent-green);
+        }
+
+        .intro {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--accent-blue);
+            margin-top: 40px;
+            margin-bottom: 20px;
+            font-size: 1.6rem;
+            border-left: 4px solid var(--accent-blue);
+            padding-left: 15px;
+        }
+
+        h3 {
+            color: var(--text-main);
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        p {
+            margin-bottom: 15px;
+        }
+
+        ul, ol {
+            margin-bottom: 20px;
+            padding-left: 25px;
+        }
+
+        li {
+            margin-bottom: 10px;
+            color: var(--text-main);
+        }
+
+        strong {
+            color: #fff;
+        }
+
+        /* Таблица */
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 25px 0;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: var(--card-bg);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.95rem;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: rgba(46, 160, 67, 0.1);
+            color: var(--accent-green);
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        /* Блок кода */
+        pre {
+            background-color: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 20px;
+            overflow-x: auto;
+            margin: 25px 0;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.9rem;
+            color: #e6edf3;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        code {
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--accent-yellow);
+        }
+
+        pre code {
+            color: inherit;
+            background: none;
+            padding: 0;
+        }
+
+        /* Предупреждения */
+        .alert {
+            padding: 15px 20px;
+            border-radius: 6px;
+            margin: 25px 0;
+            border-left: 4px solid;
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        .alert-warning {
+            border-color: var(--accent-red);
+            background-color: rgba(218, 54, 51, 0.1);
+        }
+
+        .alert-info {
+            border-color: var(--telegram-color);
+            background-color: rgba(36, 161, 222, 0.1);
+        }
+
+        .alert-title {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .alert-warning .alert-title { color: var(--accent-red); }
+        .alert-info .alert-title { color: var(--telegram-color); }
+
+        /* Шаги настройки Telegram */
+        .tg-steps {
+            background-color: rgba(36, 161, 222, 0.05);
+            border: 1px solid var(--telegram-color);
+            border-radius: 6px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+
+        .tg-steps h4 {
+            color: var(--telegram-color);
+            font-family: 'Share Tech Mono', monospace;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+
+        /* Ссылки в тексте */
+        a {
+            color: var(--accent-blue);
+            text-decoration: none;
+            border-bottom: 1px dotted var(--accent-blue);
+            transition: all 0.2s;
+        }
+
+        a:hover {
+            color: #fff;
+            border-bottom-style: solid;
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border-color);
+            margin-top: 60px;
+            font-size: 0.9rem;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 600px) {
+            h1 { font-size: 1.8rem; }
+            h2 { font-size: 1.4rem; }
+            .nav-container { flex-direction: column; gap: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Навигация -->
+    <nav class="nav-bar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">&lt;ESP8266_LAB /&gt;</a>
+            <a href="index.html" class="back-btn">← Назад к списку проектов</a>
+        </div>
+    </nav>
+
+    <!-- Основной контент -->
+    <article class="article-container">
+        <header class="article-header">
+            <h1>Система умного дома на <span>ESP8266</span> с Telegram</h1>
+            <p class="intro">
+                В этом проекте мы превратим локальную систему мониторинга в полноценную систему безопасности умного дома. ESP8266 будет отслеживать открытие двери, движение и температуру, а при возникновении тревожных событий мгновенно отправлять уведомления вам в <strong>Telegram</strong>. Это позволяет контролировать жилье из любой точки мира.
+            </p>
+        </header>
+
+        <section>
+            <h2>Архитектура системы</h2>
+            <p>Система работает по следующему алгоритму:</p>
+            <ol>
+                <li>ESP8266 подключается к Wi-Fi.</li>
+                <li>В цикле опрашиваются датчики (Геркон, PIR, DHT11/22).</li>
+                <li>При изменении состояния (дверь открылась, обнаружено движение) формируется HTTP-запрос к API Telegram.</li>
+                <li>Бот отправляет сообщение в ваш чат.</li>
+            </ol>
+            <div class="alert alert-info">
+                <span class="alert-title">🔒 Безопасность</span>
+                Данные передаются по защищенному протоколу HTTPS. Ваш токен бота должен храниться в секрете и не выкладываться в открытый доступ (GitHub и т.д.).
+            </div>
+        </section>
+
+        <section>
+            <h2>Необходимые компоненты</h2>
+            <ul>
+                <li>ESP8266 (NodeMCU или Wemos D1 Mini).</li>
+                <li>Датчик открытия двери (Геркон).</li>
+                <li>Датчик движения (AM312 или HC-SR501).</li>
+                <li>Датчик температуры и влажности (DHT11 или DHT22).</li>
+                <li>Резисторы (4.7 кОм для DHT, 10 кОм для геркона - опционально).</li>
+                <li>Смартфон с установленным Telegram.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Шаг 1: Настройка Telegram бота</h2>
+            <div class="tg-steps">
+                <h4>🤖 Создание бота и получение токена</h4>
+                <ol>
+                    <li>Откройте Telegram и найдите бота <strong>@BotFather</strong>.</li>
+                    <li>Отправьте команду <code>/newbot</code>.</li>
+                    <li>Придумайте имя боту (например, <code>MyHomeSecurityBot</code>) и юзернейм (должен заканчиваться на <code>bot</code>, например <code>my_home_sec_bot</code>).</li>
+                    <li>BotFather выдаст вам <strong>API Token</strong> (длинная строка символов). Сохраните его, он понадобится для кода.</li>
+                </ol>
+
+                <h4>🆔 Получение Chat ID</h4>
+                <ol>
+                    <li>Найдите своего нового бота в поиске и нажмите <strong>Start</strong> (или отправьте <code>/start</code>).</li>
+                    <li>Откройте бота <strong>@userinfobot</strong> (или любого аналога) и нажмите Start.</li>
+                    <li>Он пришлет вам ваш <strong>Id</strong> (набор цифр). Это ваш Chat ID.</li>
+                    <li><em>Альтернатива:</em> Отправьте сообщение боту, затем перейдите в браузере по ссылке: <br>
+                    <code>https://api.telegram.org/bot&lt;ВАШ_ТОКЕН&gt;/getUpdates</code><br>
+                    В ответе JSON найдите поле <code>"chat":{"id": ...}</code>.</li>
+                </ol>
+            </div>
+        </section>
+
+        <section>
+            <h2>Шаг 2: Схема подключения</h2>
+            <p>Используем стандартную схему, рассмотренную в предыдущих уроках.</p>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Компонент</th>
+                            <th>Пин ESP8266</th>
+                            <th>Примечание</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Геркон (Signal)</strong></td>
+                            <td>D1 (GPIO5)</td>
+                            <td>Режим INPUT_PULLUP</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Датчик движения (OUT)</strong></td>
+                            <td>D2 (GPIO4)</td>
+                            <td>Режим INPUT</td>
+                        </tr>
+                        <tr>
+                            <td><strong>DHT11/22 (DATA)</strong></td>
+                            <td>D3 (GPIO0)</td>
+                            <td>Нужен резистор 4.7-10кОм к VCC</td>
+                        </tr>
+                        <tr>
+                            <td><strong>VCC</strong></td>
+                            <td>3V3 / 5V</td>
+                            <td>В зависимости от датчика</td>
+                        </tr>
+                        <tr>
+                            <td><strong>GND</strong></td>
+                            <td>GND</td>
+                            <td>Общая земля</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section>
+            <h2>Шаг 3: Установка библиотек</h2>
+            <p>В Arduino IDE установите следующие библиотеки:</p>
+            <ol>
+                <li><strong>UniversalTelegramBot</strong> (автор: Brian Lough) — для работы с API Telegram.</li>
+                <li><strong>ArduinoJson</strong> (автор: Benoit Blanchon) — версия 6.x (требуется для парсинга ответов).</li>
+                <li><strong>DHT sensor library</strong> (Adafruit) — для датчика температуры.</li>
+            </ol>
+        </section>
+
+        <section>
+            <h2>Программный код</h2>
+            <p>Замените <code>YOUR_BOT_TOKEN</code> и <code>YOUR_CHAT_ID</code> на полученные ранее данные. Также укажите данные вашей Wi-Fi сети.</p>
+
+<pre><code>#include <ESP8266WiFi.h>
+#include <WiFiClientSecure.h>
+#include <UniversalTelegramBot.h>
+#include <ArduinoJson.h>
+#include <DHT.h>
+
+// --- НАСТРОЙКИ WI-FI ---
+const char* ssid = "YOUR_WIFI_SSID";
+const char* password = "YOUR_WIFI_PASSWORD";
+
+// --- НАСТРОЙКИ TELEGRAM ---
+#define BOTtoken "YOUR_BOT_TOKEN"  // Токен от BotFather
+#define BOTchatID "YOUR_CHAT_ID"   // Ваш Chat ID
+
+// --- НАСТРОЙКИ ПИНОВ ---
+#define REED_PIN D1      // Геркон
+#define MOTION_PIN D2    // Движение
+#define DHT_PIN D3       // Температура
+#define DHTTYPE DHT11    // Или DHT22
+
+// Инициализация
+X509List cert(TELEGRAM_CERTIFICATE_ROOT);
+WiFiClientSecure secured_client;
+UniversalTelegramBot bot(BOTtoken, secured_client);
+DHT dht(DHT_PIN, DHTTYPE);
+
+// Переменные состояния
+bool doorOpen = false;
+bool motionDetected = false;
+unsigned long lastMotionTime = 0;
+unsigned long botLastTime = 0;
+const unsigned long botRequestDelay = 1000; // Задержка между запросами к боту
+
+void setup() {
+  Serial.begin(115200);
+  
+  // Настройка пинов
+  pinMode(REED_PIN, INPUT_PULLUP);
+  pinMode(MOTION_PIN, INPUT);
+  dht.begin();
+
+  // Подключение к Wi-Fi
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, password);
+  Serial.print("Connecting to Wifi: ");
+  Serial.println(ssid);
+  
+  while (WiFi.status() != WL_CONNECTED) {
+    Serial.print(".");
+    delay(500);
+  }
+  Serial.println("\nWiFi connected");
+  
+  // Настройка времени для проверки сертификатов
+  configTime(0, 0, "pool.ntp.org");
+  
+  secured_client.setTrustAnchors(&cert);
+  
+  // Приветственное сообщение
+  bot.sendMessage(BOTchatID, "🏠 Система охраны запущена!\nWi-Fi подключен.\nВсе датчики в норме.", "");
+}
+
+void loop() {
+  // Проверка новых сообщений от бота (опционально, если нужно управление)
+  if (millis() - botLastTime > botRequestDelay) {
+    // bot.handleUpdate(responses); // Можно раскомментировать для обратной связи
+    botLastTime = millis();
+  }
+
+  checkSensors();
+  delay(200);
+}
+
+void checkSensors() {
+  // 1. Проверка геркона (Дверь)
+  bool currentDoorState = digitalRead(REED_PIN);
+  // LOW = закрыто (замкнуто на землю), HIGH = открыто (подтяжка)
+  if (currentDoorState == HIGH && !doorOpen) {
+    doorOpen = true;
+    sendAlarm("🚨 ТРЕВОГА: Дверь открыта!");
+  } else if (currentDoorState == LOW && doorOpen) {
+    doorOpen = false;
+    // Опционально: сообщить о закрытии
+    // bot.sendMessage(BOTchatID, "✅ Дверь закрыта", "");
+  }
+
+  // 2. Проверка движения
+  int motionVal = digitalRead(MOTION_PIN);
+  if (motionVal == HIGH) {
+    if (!motionDetected) {
+      motionDetected = true;
+      lastMotionTime = millis();
+      float temp = dht.readTemperature();
+      String msg = "👁️ Обнаружено движение!\n";
+      msg += "🌡️ Температура: " + String(temp, 1) + " *C";
+      sendAlarm(msg);
+    }
+    lastMotionTime = millis(); // Продлеваем таймер
+  }
+  
+  // Сброс флага движения через 5 секунд тишины
+  if (motionDetected && (millis() - lastMotionTime > 5000)) {
+    motionDetected = false;
+  }
+}
+
+void sendAlarm(String message) {
+  Serial.println("Отправка уведомления: " + message);
+  // Экранирование спецсимволов для Markdown не обязательно для простого текста,
+  // но лучше использовать режим ParseMode
+  bot.sendMessage(BOTchatID, message, "Markdown");
+  delay(1000); // Небольшая пауза, чтобы не спамить API при дребезге
+}
+</code></pre>
+
+            <h3>Разбор ключевых моментов:</h3>
+            <ul>
+                <li><strong>WiFiClientSecure</strong>: Используется для защищенного соединения с серверами Telegram (порт 443).</li>
+                <li><strong>configTime</strong>: Необходима для корректной проверки SSL-сертификатов. Убедитесь, что у ESP8266 есть доступ к интернету для синхронизации времени при старте.</li>
+                <li><strong>Логика уведомлений</strong>: Сообщения отправляются только при <em>изменении</em> состояния (флаги <code>doorOpen</code>, <code>motionDetected</code>). Это предотвращает спам тысячами сообщений, пока дверь открыта.</li>
+                <li><strong>Температура в тревоге</strong>: При срабатывании движения мы сразу считываем температуру и добавляем её в сообщение, чтобы вы понимали контекст (например, это человек или просто сквозняк/нагрев).</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Возможные проблемы и решения</h2>
+            <ul>
+                <li><strong>Ошибка SSL / Connection Failed</strong>:
+                    <ul>
+                        <li>Проверьте, правильно ли установлено системное время (функция <code>configTime</code>).</li>
+                        <li>Убедитесь, что библиотека <code>UniversalTelegramBot</code> свежая.</li>
+                        <li>Попробуйте перезагрузить плату.</li>
+                    </ul>
+                </li>
+                <li><strong>Сообщения не приходят</strong>:
+                    <ul>
+                        <li>Проверьте правильность Token и Chat ID.</li>
+                        <li>Убедитесь, что вы нажали <strong>Start</strong> в диалоге с ботом.</li>
+                        <li>Проверьте консоль (Serial Monitor) на наличие ошибок подключения к Wi-Fi.</li>
+                    </ul>
+                </li>
+                <li><strong>Ложные срабатывания</strong>:
+                    <ul>
+                        <li>Для геркона добавьте программную задержку или конденсатор.</li>
+                        <li>Для датчика движения уменьшите чувствительность потенциометром.</li>
+                    </ul>
+                </li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Куда развивать проект?</h2>
+            <p>Эта система — отличная база. Вот что можно добавить:</p>
+            <ul>
+                <li><strong>Команды боту</strong>: Реализуйте обработку входящих сообщений. Например, при команде <code>/status</code> бот будет присылать текущую температуру и состояние дверей.</li>
+                <li><strong>Deep Sleep</strong>: Для автономной работы от батареи используйте глубокий сон. ESP8266 будет просыпаться только при срабатывании прерывания на пине геркона или движения, отправлять сообщение и снова засыпать.</li>
+                <li><strong>Фото с камеры</strong>: Если подключить ESP32-CAM вместо ESP8266, можно отправлять фотографию нарушителя прямо в чат.</li>
+                <li><strong>Сирена</strong>: Добавьте реле с сиреной, которое включается автоматически при отправке тревоги.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Заключение</h2>
+            <p>Мы создали полноценную систему безопасности, которая не требует дорогих подписок и облачных сервисов. Все данные идут напрямую с вашего устройства в ваш мессенджер. ESP8266 доказал, что даже недорогой микроконтроллер может стать сердцем умного дома, обеспечивая безопасность и спокойствие.</p>
+        </section>
+
+    </article>
+
+    <footer>
+        <p>&copy; 2026 ESP8266 Electronics Lab. Статья основана на материалах psseven.ru</p>
+        <p style="font-size: 0.8em; margin-top: 10px; opacity: 0.6;">Made with ❤️ and ⚡</p>
+    </footer>
+
+</body>
+</html>
