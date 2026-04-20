@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Управляем выходами через веб-сервер на ESP32</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      color: #24292e;
+      background: #fff;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+    h1 {
+      font-size: 2rem;
+      margin: 1.5rem 0 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid #eaecef;
+      color: #0366d6;
+    }
+    h2 {
+      font-size: 1.5rem;
+      margin: 1.8rem 0 0.8rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid #eaecef;
+      color: #24292e;
+    }
+    h3 {
+      font-size: 1.25rem;
+      margin: 1.2rem 0 0.6rem;
+      color: #24292e;
+    }
+    p { margin: 0.8rem 0; }
+    ul, ol {
+      margin: 0.8rem 0 0.8rem 1.5rem;
+      padding-left: 0.5rem;
+    }
+    li { margin: 0.3rem 0; }
+    a {
+      color: #0366d6;
+      text-decoration: none;
+    }
+    a:hover { text-decoration: underline; }
+    
+    /* Code blocks */
+    pre {
+      background: #f6f8fa;
+      border: 1px solid #e1e4e8;
+      border-radius: 6px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin: 1rem 0;
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      font-size: 0.85rem;
+      line-height: 1.4;
+    }
+    code {
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      background: #f6f8fa;
+      padding: 0.2em 0.4em;
+      border-radius: 3px;
+      font-size: 0.9em;
+    }
+    pre code {
+      background: transparent;
+      padding: 0;
+      font-size: inherit;
+    }
+    
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.95rem;
+    }
+    th, td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid #e1e4e8;
+      text-align: left;
+    }
+    th {
+      background: #f6f8fa;
+      font-weight: 600;
+    }
+    tr:nth-child(even) { background: #fbfcfc; }
+    
+    /* Callout boxes */
+    .note, .warning, .tip {
+      border-left: 4px solid;
+      padding: 0.8rem 1rem;
+      margin: 1rem 0;
+      background: #f1f8ff;
+      border-radius: 0 4px 4px 0;
+    }
+    .warning {
+      background: #fff8f8;
+      border-left-color: #cb2431;
+    }
+    .tip {
+      background: #f0fff4;
+      border-left-color: #28a745;
+    }
+    .note { border-left-color: #0366d6; }
+    
+    .emoji { margin-right: 0.3rem; }
+    
+    /* Component list */
+    .components {
+      background: #f6f8fa;
+      border: 1px solid #e1e4e8;
+      border-radius: 6px;
+      padding: 1rem 1.2rem;
+      margin: 1rem 0;
+    }
+    .components ul {
+      margin: 0;
+      padding-left: 1.2rem;
+    }
+    
+    /* Connection steps */
+    .connection-steps ol {
+      counter-reset: step;
+      list-style: none;
+      padding-left: 0;
+    }
+    .connection-steps li {
+      position: relative;
+      padding-left: 2rem;
+      margin: 0.5rem 0;
+    }
+    .connection-steps li::before {
+      content: counter(step);
+      counter-increment: step;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1.5rem;
+      height: 1.5rem;
+      background: #0366d6;
+      color: white;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 1.5rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    
+    /* Footer */
+    footer {
+      margin-top: 3rem;
+      padding-top: 1rem;
+      border-top: 1px solid #eaecef;
+      font-size: 0.9rem;
+      color: #586069;
+    }
+    
+    /* Related posts */
+    .related-posts {
+      margin: 2rem 0;
+      padding: 1rem;
+      background: #f6f8fa;
+      border-radius: 6px;
+    }
+    .related-posts h3 {
+      margin-top: 0;
+      font-size: 1.1rem;
+    }
+    .related-posts ul {
+      margin: 0.5rem 0 0 1.5rem;
+    }
+    .related-posts li {
+      margin: 0.3rem 0;
+    }
+    
+    @media (max-width: 600px) {
+      body { padding: 1rem; }
+      h1 { font-size: 1.6rem; }
+      h2 { font-size: 1.3rem; }
+      pre { font-size: 0.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+<article>
+  <h1>Управляем выходами через веб-сервер на ESP32</h1>
+  
+  <p>В Интернете все веб-сайты размещаются на компьютере, и этот компьютер называется сервером. Поскольку этот конкретный сервер используется для обслуживания веб-страниц и веб-запросов, мы называем его <strong>веб-сервером</strong>. Вместо использования компьютера мы также можем использовать ESP32 для ответа на веб-запросы, благодаря встроенному WiFi ESP32. ESP32 может не только отвечать на запросы, но и обслуживать небольшие веб-страницы, которые либо были жестко закодированы в коде, либо хранились во флэш-памяти.</p>
+  
+  <p>В этой статье мы рассмотрим, как создать веб-сервер на ESP32 с нуля. Мы рассмотрим шаги по настройке ESP32, подключению светодиодов и созданию веб-интерфейса для управления ими. Независимо от того, являетесь ли вы опытным или только начинаете работать с проектами IoT, это руководство поможет вам вывести свои навыки на новый уровень.</p>
+  
+  <div class="tip">
+    <span class="emoji">💡</span><strong>Краткий обзор:</strong> Включение/выключение светодиода с помощью веб-сервера ESP32:
+    <ul style="margin-top: 0.5rem; margin-bottom: 0;">
+      <li>Подключение светодиодов к GPIO12 и GPIO14 на ESP32</li>
+      <li>Ввод IP-адреса ESP32 в браузере для доступа к странице управления</li>
+      <li>Нажатие кнопок на веб-странице для управления светодиодами</li>
+    </ul>
+  </div>
+
+  <h2>Необходимые компоненты</h2>
+  
+  <div class="components">
+    <ol>
+      <li><strong>Плата разработки ESP32</strong> — основной компонент для управления светодиодными лампами через веб-сервер</li>
+      <li><strong>Светодиодные лампы</strong> — для этого проекта использовались 2× 5 мм светодиода</li>
+      <li><strong>Макетная плата</strong> — для подключения светодиодов к микроконтроллеру</li>
+      <li><strong>Провода-перемычки</strong> — для соединения макетной платы, ESP32 и светодиодов</li>
+      <li><strong>USB-кабель</strong> — для подключения ESP32 к компьютеру для программирования</li>
+      <li><strong>Компьютер</strong> — для программирования и загрузки кода</li>
+      <li><strong>Резистор 220 Ом</strong> — для ограничения тока через светодиоды и предотвращения их перегорания</li>
+    </ol>
+  </div>
+
+  <h2>Схема подключения</h2>
+  
+  <p>Микроконтроллер ESP32 имеет много контактов GPIO, которые можно использовать для взаимодействия с внешними устройствами, такими как светодиодные фонари. В этом примере мы подключим ESP32 к двум светодиодам, подключенным к контактам GPIO 12 и 14.</p>
+  
+  <div class="connection-steps">
+    <ol>
+      <li>Подключите один конец резистора 220 Ом к контакту <strong>GPIO 12</strong> на ESP32, а другой конец — к положительному (аноду) выводу первого светодиода</li>
+      <li>Подключите отрицательную (катодную) ножку светодиода к <strong>GND</strong> на ESP32</li>
+      <li>Повторите шаги 1 и 2 для контакта <strong>GPIO 14</strong> и второго светодиода</li>
+    </ol>
+  </div>
+  
+  <div class="note">
+    <span class="emoji">ℹ️</span><strong>Примечание:</strong> Для этих же целей вы также можете использовать <strong>веб-сервер ESP32 Ethernet</strong>. В этом случае вам понадобится плата Ethernet Shield для ESP32 и небольшие изменения в коде.
+  </div>
+
+  <h2>Библиотеки</h2>
+  
+  <p>Вам не нужно устанавливать какую-либо специальную библиотеку для использования веб-сервера, поскольку <strong>библиотека веб-сервера ESP32</strong> является частью ядра ESP32 Arduino. Существует множество <strong>примеров веб-сервера ESP32</strong>, которые поставляются с библиотекой — вы можете ознакомиться с ними через меню <em>Файл → Примеры → ESP32 → WebServer</em> в Arduino IDE.</p>
+
+  <h2>Код веб-сервера для управления выходами</h2>
+  
+  <div class="warning">
+    <span class="emoji">❗</span><strong>Важно:</strong> Перед загрузкой кода обязательно измените сетевые учетные данные (<code>ssid</code> и <code>password</code>) на свои.
+  </div>
+  
+  <pre><code>// Загрузка библиотеки Wi-Fi
+#include &lt;WiFi.h&gt;
+
+// Замените на ваши сетевые учетные данные
+const char* ssid = "REPLACE_WITH_YOUR_SSID";
+const char* password = "REPLACE_WITH_YOUR_PASSWORD";
+
+// Установите номер порта веб-сервера на 80
+WiFiServer server(80);
+
+// Переменная для хранения заголовка HTTP-запроса
+String header;
+
+// Вспомогательные переменные для хранения текущего состояния вывода
+String output12State = "off";
+String output14State = "off";
+
+// Назначьте выходные переменные контактам GPIO
+const int output12 = 12;
+const int output14 = 14;
+
+// Текущее время
+unsigned long currentTime = millis();
+// Предыдущее время
+unsigned long previousTime = 0;
+// Определите время ожидания в миллисекундах (пример: 2000 мс = 2 с)
+const long timeoutTime = 2000;
+
+void setup() {
+  Serial.begin(115200);
+  
+  // Инициализируем выходные переменные как выходные
+  pinMode(output12, OUTPUT);
+  pinMode(output14, OUTPUT);
+  
+  // Устанавливаем выходные значения в LOW
+  digitalWrite(output12, LOW);
+  digitalWrite(output14, LOW);
+  
+  // Подключаемся к сети Wi-Fi с помощью SSID и пароля
+  Serial.print("Connecting to ");
+  Serial.println(ssid);
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  
+  // Вывод локального IP-адреса и запуск веб-сервера
+  Serial.println("");
+  Serial.println("WiFi connected.");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+  server.begin();
+}
+
+void loop(){
+  WiFiClient client = server.available();   // Прослушивание входящих клиентов
+  
+  if (client) {                             // Если подключается новый клиент
+    currentTime = millis();
+    previousTime = currentTime;
+    Serial.println("New Client.");          // вывод сообщения в последовательный порт
+    
+    String currentLine = "";                // строка для хранения входящих данных
+    while (client.connected() &amp;&amp; currentTime - previousTime &lt;= timeoutTime) {
+      currentTime = millis();
+      if (client.available()) {             // если есть байты для чтения
+        char c = client.read();             // чтение байта
+        Serial.write(c);                    // печать
+        header += c;
+        
+        if (c == '\n') {                    // если байт является символом новой строки
+          // если текущая строка пустая — конец HTTP-запроса
+          if (currentLine.length() == 0) {
+            // HTTP-заголовки ответа
+            client.println("HTTP/1.1 200 OK");
+            client.println("Content-type:text/html");
+            client.println("Connection: close");
+            client.println();
+            
+            // Обработка команд включения/выключения GPIO
+            if (header.indexOf("GET /12/on") &gt;= 0) {
+              Serial.println("GPIO 12 on");
+              output12State = "on";
+              digitalWrite(output12, HIGH);
+            } else if (header.indexOf("GET /12/off") &gt;= 0) {
+              Serial.println("GPIO 12 off");
+              output12State = "off";
+              digitalWrite(output12, LOW);
+            } else if (header.indexOf("GET /14/on") &gt;= 0) {
+              Serial.println("GPIO 14 on");
+              output14State = "on";
+              digitalWrite(output14, HIGH);
+            } else if (header.indexOf("GET /14/off") &gt;= 0) {
+              Serial.println("GPIO 14 off");
+              output14State = "off";
+              digitalWrite(output14, LOW);
+            }
+            
+            // Генерация HTML-страницы
+            client.println("&lt;!DOCTYPE html&gt;&lt;html&gt;");
+            client.println("&lt;head&gt;&lt;meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"&gt;");
+            client.println("&lt;link rel=\"icon\" href=\"data:,\"&gt;");
+            
+            // CSS-стили для кнопок
+            client.println("&lt;style&gt;html { font-family: Helvetica; display: inline-block; margin: 0px auto; text-align: center;}");
+            client.println(".button { background-color: #4CAF50; border: none; color: white; padding: 16px 40px;");
+            client.println("text-decoration: none; font-size: 30px; margin: 2px; cursor: pointer;}");
+            client.println(".button2 {background-color: #555555;}&lt;/style&gt;&lt;/head&gt;");
+            
+            // Тело страницы
+            client.println("&lt;body&gt;&lt;h1&gt;ESP32 Web Server&lt;/h1&gt;");
+            
+            // GPIO 12
+            client.println("&lt;p&gt;GPIO 12 - State " + output12State + "&lt;/p&gt;");
+            if (output12State=="off") {
+              client.println("&lt;p&gt;&lt;a href=\"/12/on\"&gt;&lt;button class=\"button\"&gt;ON&lt;/button&gt;&lt;/a&gt;&lt;/p&gt;");
+            } else {
+              client.println("&lt;p&gt;&lt;a href=\"/12/off\"&gt;&lt;button class=\"button button2\"&gt;OFF&lt;/button&gt;&lt;/a&gt;&lt;/p&gt;");
+            }
+            
+            // GPIO 14
+            client.println("&lt;p&gt;GPIO 14 - State " + output14State + "&lt;/p&gt;");
+            if (output14State=="off") {
+              client.println("&lt;p&gt;&lt;a href=\"/14/on\"&gt;&lt;button class=\"button\"&gt;ON&lt;/button&gt;&lt;/a&gt;&lt;/p&gt;");
+            } else {
+              client.println("&lt;p&gt;&lt;a href=\"/14/off\"&gt;&lt;button class=\"button button2\"&gt;OFF&lt;/button&gt;&lt;/a&gt;&lt;/p&gt;");
+            }
+            
+            client.println("&lt;/body&gt;&lt;/html&gt;");
+            
+            // Завершение HTTP-ответа
+            client.println();
+            break;
+          } else {
+            currentLine = "";
+          }
+        } else if (c != '\r') {
+          currentLine += c;
+        }
+      }
+    }
+    header = "";
+    client.stop();
+    Serial.println("Client disconnected.");
+    Serial.println("");
+  }
+}</code></pre>
+
+  <h2>Загрузка и тестирование</h2>
+  
+  <ol>
+    <li>Откройте Arduino IDE и вставьте приведённый выше код</li>
+    <li>Замените <code>REPLACE_WITH_YOUR_SSID</code> и <code>REPLACE_WITH_YOUR_PASSWORD</code> на данные вашей сети Wi-Fi</li>
+    <li>Выберите плату: <strong>Инструменты → Плата → ESP32 Dev Module</strong></li>
+    <li>Выберите порт: <strong>Инструменты → Порт</strong></li>
+    <li>Загрузите скетч на ESP32</li>
+    <li>Откройте монитор последовательного порта (115200 бод) и дождитесь появления IP-адреса</li>
+    <li>Введите этот IP-адрес в браузере вашего смартфона или компьютера</li>
+    <li>Управляйте светодиодами с помощью кнопок на веб-странице</li>
+  </ol>
+  
+  <div class="tip">
+    <span class="emoji">🔧</span><strong>Совет:</strong> Если ESP32 не подключается к сети, проверьте:
+    <ul style="margin-top: 0.5rem;">
+      <li>Правильность ввода SSID и пароля (чувствительно к регистру)</li>
+      <li>Поддержку диапазона 2.4 ГГц вашей сетью (ESP32 не поддерживает 5 ГГц)</li>
+      <li>Стабильность питания платы (рекомендуется 5В через VIN)</li>
+    </ul>
+  </div>
+
+  <h2>Возможные проблемы и решения</h2>
+  
+  <ul>
+    <li><strong>Веб-страница не загружается:</strong>
+      <ul>
+        <li>Убедитесь, что устройство подключено к той же сети Wi-Fi, что и ESP32</li>
+        <li>Проверьте корректность введённого IP-адреса</li>
+        <li>Попробуйте использовать другой браузер или устройство</li>
+      </ul>
+    </li>
+    <li><strong>Светодиоды не реагируют:</strong>
+      <ul>
+        <li>Проверьте полярность подключения светодиодов</li>
+        <li>Убедитесь, что резисторы подключены последовательно с анодом</li>
+        <li>Проверьте, назначены ли пины как OUTPUT в коде</li>
+      </ul>
+    </li>
+    <li><strong>ESP32 перезагружается:</strong>
+      <ul>
+        <li>Добавьте конденсатор 10–100 мкФ между 3.3В и GND рядом с платой</li>
+        <li>Используйте стабильный источник питания 5В/2А</li>
+      </ul>
+    </li>
+  </ul>
+</article>
+
+</body>
+</html>
