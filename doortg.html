@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Монитор состояния дверей с уведомлениями Telegram на ESP8266 NodeMCU</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      color: #24292e;
+      background: #fff;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+    h1 {
+      font-size: 2rem;
+      margin: 1.5rem 0 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid #eaecef;
+      color: #0366d6;
+    }
+    h2 {
+      font-size: 1.5rem;
+      margin: 1.8rem 0 0.8rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid #eaecef;
+      color: #24292e;
+    }
+    h3 {
+      font-size: 1.25rem;
+      margin: 1.2rem 0 0.6rem;
+      color: #24292e;
+    }
+    p { margin: 0.8rem 0; }
+    ul, ol {
+      margin: 0.8rem 0 0.8rem 1.5rem;
+      padding-left: 0.5rem;
+    }
+    li { margin: 0.3rem 0; }
+    a {
+      color: #0366d6;
+      text-decoration: none;
+    }
+    a:hover { text-decoration: underline; }
+    
+    /* Code blocks */
+    pre {
+      background: #f6f8fa;
+      border: 1px solid #e1e4e8;
+      border-radius: 6px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin: 1rem 0;
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      font-size: 0.9rem;
+    }
+    code {
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      background: #f6f8fa;
+      padding: 0.2em 0.4em;
+      border-radius: 3px;
+      font-size: 0.9em;
+    }
+    pre code {
+      background: transparent;
+      padding: 0;
+      font-size: inherit;
+    }
+    
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.95rem;
+    }
+    th, td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid #e1e4e8;
+      text-align: left;
+    }
+    th {
+      background: #f6f8fa;
+      font-weight: 600;
+    }
+    tr:nth-child(even) { background: #fbfcfc; }
+    
+    /* Callout boxes */
+    .note, .warning, .tip {
+      border-left: 4px solid;
+      padding: 0.8rem 1rem;
+      margin: 1rem 0;
+      background: #f1f8ff;
+      border-radius: 0 4px 4px 0;
+    }
+    .warning {
+      background: #fff8f8;
+      border-left-color: #cb2431;
+    }
+    .tip {
+      background: #f0fff4;
+      border-left-color: #28a745;
+    }
+    .note { border-left-color: #0366d6; }
+    
+    .emoji { margin-right: 0.3rem; }
+    
+    /* Footer */
+    footer {
+      margin-top: 3rem;
+      padding-top: 1rem;
+      border-top: 1px solid #eaecef;
+      font-size: 0.9rem;
+      color: #586069;
+    }
+    
+    @media (max-width: 600px) {
+      body { padding: 1rem; }
+      h1 { font-size: 1.6rem; }
+      h2 { font-size: 1.3rem; }
+      pre { font-size: 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+
+<article>
+  <h1>Монитор состояния дверей с уведомлениями Telegram на ESP8266 NodeMCU</h1>
+  
+  <p>В этом проекте вы будете отслеживать открывание двери с помощью ESP8266 NodeMCU и магнитного геркона. Вы будете получать сообщение в своей учетной записи Telegram всякий раз, когда дверь меняет состояние: открыта или закрыта. Пока у вас есть доступ к Интернету на вашем смартфоне, вы будете получать уведомления, где бы вы ни находились. Плата ESP8266 будет запрограммирована с использованием Arduino IDE.</p>
+  
+  <p>Магнитный контактный переключатель — это, по сути, геркон, заключенный в пластиковый корпус, поэтому вы можете легко прикрепить его к двери, окну или ящику, чтобы определить, открыта она или закрыта.</p>
+  
+  <p>Электрическая цепь замыкается, когда магнит находится рядом с выключателем — дверь закрыта. Когда магнит находится далеко от выключателя – дверь открыта – цепь разомкнута.</p>
+  
+  <p>Мы будем программировать плату ESP8266 с использованием Arduino IDE, поэтому убедитесь, что она установлена в вашей Arduino IDE.</p>
+
+  <h2>Универсальная библиотека ботов Telegram</h2>
+  
+  <p>Для взаимодействия с ботом Telegram мы будем использовать <strong>универсальную библиотеку ботов Telegram</strong>, созданную Брайаном Лофом, которая обеспечивает простой интерфейс для API бота Telegram.</p>
+  
+  <p>Выполните следующие шаги, чтобы установить последнюю версию библиотеки:</p>
+  
+  <ol>
+    <li>Нажмите <a href="https://github.com/witnessmenow/Universal-Arduino-Telegram-Bot">здесь</a>, чтобы загрузить библиотеку Universal Arduino Telegram Bot.</li>
+    <li>Перейдите в <strong>«Скетч»</strong> → <strong>«Включить библиотеку»</strong> → <strong>«Добавить .ZIP-библиотеку»</strong>.</li>
+    <li>Добавьте библиотеку, которую вы только что скачали.</li>
+  </ol>
+  
+  <div class="warning">
+    <span class="emoji">❗</span><strong>Важно:</strong> не устанавливайте библиотеку через диспетчер библиотек Arduino, поскольку это может привести к установке устаревшей версии.
+  </div>
+  
+  <p>Все подробности о библиотеке можно найти на <a href="https://github.com/witnessmenow/Universal-Arduino-Telegram-Bot">странице GitHub Universal Arduino Telegram Bot Library</a>.</p>
+
+  <h2>Библиотека ArduinoJson</h2>
+  
+  <p>Вам также необходимо установить библиотеку <strong>ArduinoJson</strong>. Выполните следующие шаги:</p>
+  
+  <ol>
+    <li>Перейдите в <strong>Sketch</strong> → <strong>Include Library</strong> → <strong>Manage Libraries</strong>.</li>
+    <li>Найдите «ArduinoJson».</li>
+    <li>Установите библиотеку.</li>
+  </ol>
+  
+  <p>Мы используем библиотеку ArduinoJson версии 6.15.2.</p>
+
+  <h2>Схема подключения</h2>
+  
+  <p>Мы подключили геркон к GPIO 4 (D2), но подключить его можно к любому подходящему GPIO.</p>
+  
+  <div class="tip">
+    <span class="emoji">💡</span><strong>Подсказка:</strong> GPIO 4 на NodeMCU соответствует пину D2.
+  </div>
+
+  <h2>Пример кода</h2>
+  
+  <p>Скопируйте приведённый ниже эскиз в вашу Arduino IDE. Замените SSID, пароль, токен BOT и идентификатор пользователя своими учетными данными.</p>
+  
+  <pre><code>#include &lt;ESP8266WiFi.h&gt;
+#include &lt;WiFiClientSecure.h&gt;
+#include &lt;UniversalTelegramBot.h&gt;
+#include &lt;ArduinoJson.h&gt;
+
+// Установите GPIO для светодиода и геркона
+const int reedSwitch = 4;
+const int led = 2; //optional
+
+// Обнаруживает всякий раз, когда дверь меняет состояние
+bool changeState = false;
+
+// Удерживает состояние геркона (1=открыто, 0=закрыто)
+bool state;
+String doorState;
+
+// Вспомогательные переменные
+unsigned long previousMillis = 0;
+const long interval = 1500;
+
+const char* ssid = "REPLACE_WITH_YOUR_SSID";
+const char* password = "REPLACE_WITH_YOUR_PASSWORD";
+
+// Initialize Telegram BOT
+#define BOTtoken "XXXXXXXXXX:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"  // ваш токен бота (получите от Botfather)
+
+// Используйте @myidbot, чтобы узнать идентификатор чата отдельного человека или группы.
+// Также обратите внимание, что вам нужно нажать «старт» на боте, прежде чем он сможет отправлять вам сообщения
+#define CHAT_ID "XXXXXXXXXX"
+
+X509List cert(TELEGRAM_CERTIFICATE_ROOT);
+WiFiClientSecure client;
+UniversalTelegramBot bot(BOTtoken, client);
+
+// Запускается всякий раз, когда геркон меняет состояние.
+ICACHE_RAM_ATTR void changeDoorStatus() {
+  Serial.println("State changed");
+  changeState = true;
+}
+
+void setup() {
+  // Последовательный порт для отладки
+  Serial.begin(115200);
+  configTime(0, 0, "pool.ntp.org");      // получить время UTC через NTP
+  client.setTrustAnchors(&cert);  // Добавить корневой сертификат для api.telegram.org
+
+  // Определяем текущее состояние двери
+  pinMode(reedSwitch, INPUT_PULLUP);
+  state = digitalRead(reedSwitch);
+
+  // Устанавливаем состояние светодиода в соответствии с состоянием двери
+  pinMode(led, OUTPUT);
+  digitalWrite(led, state);
+
+  // Установим контакт геркона в разомкнутое состояние, назначим функцию прерывания и установим режим CHANGE.
+  attachInterrupt(digitalPinToInterrupt(reedSwitch), changeDoorStatus, CHANGE);
+
+  // Подключение к Wi-Fi
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, password);  // Пишем название точки доступа и пароль для подключения
+    while (WiFi.status() != WL_CONNECTED) {
+      delay(500);
+      Serial.print(".");
+    }
+    Serial.println("");
+    Serial.println("WiFi connected");
+
+    bot.sendMessage(CHAT_ID, "Bot started up", "");
+}
+
+void loop() {
+  if (changeState){
+    unsigned long currentMillis = millis();
+    if(currentMillis - previousMillis >= interval) {
+      previousMillis = currentMillis;
+      // Если изменение произошло, инвертируем текущее состояние двери.
+        state = !state;
+        if(state) {
+          doorState = "closed";
+        }
+        else{
+          doorState = "open";
+        }
+        digitalWrite(led, state);
+        changeState = false;
+        Serial.println(state);
+        Serial.println(doorState);
+
+        //Send notification
+        bot.sendMessage(CHAT_ID, "The door is " + doorState, "");
+    }
+  }
+}</code></pre>
+
+  <h2>Загрузка и тестирование</h2>
+  
+  <p>После изменения эскиза, включив в него ваши сетевые учетные данные, токен бота и идентификатор пользователя, загрузите его на свой ESP8266:</p>
+  
+  <ol>
+    <li>Перейдите в <strong>«Инструменты»</strong> → <strong>«Плата»</strong> и выберите плату ESP8266.</li>
+    <li>Затем перейдите в <strong>«Инструменты»</strong> → <strong>«Порт»</strong> и выберите COM-порт, к которому подключен ESP8266.</li>
+    <li>Откройте последовательный монитор на скорости передачи 115200 бод, чтобы проверить, обнаружены ли изменения.</li>
+  </ol>
+  
+  <p>Для создания прототипа/тестирования вы можете прикрепить магнитный геркон к двери с помощью липучки.</p>
+  
+  <div class="note">
+    <span class="emoji">✅</span><strong>Результат:</strong> Теперь, когда кто-то открывает/закрывает вашу дверь, вы получаете сообщение в своем аккаунте Telegram.
+  </div>
+
+  <h2>Возможные проблемы и решения</h2>
+  
+  <ul>
+    <li><strong>Бот не отправляет сообщения:</strong>
+      <ul>
+        <li>Проверьте правильность токена бота и CHAT_ID.</li>
+        <li>Убедитесь, что вы нажали <strong>«Start»</strong> в диалоге с ботом в Telegram.</li>
+        <li>Проверьте подключение к интернету на ESP8266.</li>
+      </ul>
+    </li>
+    <li><strong>Геркон не срабатывает:</strong>
+      <ul>
+        <li>Проверьте подключение пина к GPIO и наличие INPUT_PULLUP.</li>
+        <li>Убедитесь, что магнит находится достаточно близко к геркону в закрытом состоянии.</li>
+      </ul>
+    </li>
+    <li><strong>ESP8266 перезагружается:</strong>
+      <ul>
+        <li>Проверьте стабильность питания (рекомендуется 5В через VIN).</li>
+        <li>Добавьте конденсатор 10–100 мкФ между VCC и GND рядом с платой.</li>
+      </ul>
+    </li>
+  </ul>
+
+  <footer>
+    <p><em>Источник: <a href="https://psseven.ru/2024/05/11/%d0%bc%d0%be%d0%bd%d0%b8%d1%82%d0%be%d1%80-%d1%81%d0%be%d1%81%d1%82%d0%be%d1%8f%d0%bd%d0%b8%d1%8f-%d0%b4%d0%b2%d0%b5%d1%80%d0%b5%d0%b9-%d1%81-%d1%83%d0%b2%d0%b5%d0%b4%d0%be%d0%bc%d0%bb%d0%b5%d0%bd/">psseven.ru</a> | Оформлено в стиле технической документации</em></p>
+  </footer>
+</article>
+
+</body>
+</html>
