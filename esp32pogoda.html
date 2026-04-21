@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Погодная станция на базе ESP32</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      color: #24292e;
+      background: #fff;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+    h1 {
+      font-size: 2rem;
+      margin: 1.5rem 0 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid #eaecef;
+      color: #0366d6;
+    }
+    h2 {
+      font-size: 1.5rem;
+      margin: 1.8rem 0 0.8rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid #eaecef;
+      color: #24292e;
+    }
+    h3 {
+      font-size: 1.25rem;
+      margin: 1.2rem 0 0.6rem;
+      color: #24292e;
+    }
+    h4 {
+      font-size: 1.1rem;
+      margin: 1rem 0 0.5rem;
+      color: #24292e;
+    }
+    p { margin: 0.8rem 0; }
+    ul, ol {
+      margin: 0.8rem 0 0.8rem 1.5rem;
+      padding-left: 0.5rem;
+    }
+    li { margin: 0.3rem 0; }
+    a {
+      color: #0366d6;
+      text-decoration: none;
+    }
+    a:hover { text-decoration: underline; }
+    
+    /* Code blocks */
+    pre {
+      background: #f6f8fa;
+      border: 1px solid #e1e4e8;
+      border-radius: 6px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin: 1rem 0;
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      font-size: 0.85rem;
+      line-height: 1.4;
+    }
+    code {
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      background: #f6f8fa;
+      padding: 0.2em 0.4em;
+      border-radius: 3px;
+      font-size: 0.9em;
+    }
+    pre code {
+      background: transparent;
+      padding: 0;
+      font-size: inherit;
+    }
+    
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.95rem;
+    }
+    th, td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid #e1e4e8;
+      text-align: left;
+    }
+    th {
+      background: #f6f8fa;
+      font-weight: 600;
+    }
+    tr:nth-child(even) { background: #fbfcfc; }
+    
+    /* Callout boxes */
+    .note, .warning, .tip {
+      border-left: 4px solid;
+      padding: 0.8rem 1rem;
+      margin: 1rem 0;
+      background: #f1f8ff;
+      border-radius: 0 4px 4px 0;
+    }
+    .warning {
+      background: #fff8f8;
+      border-left-color: #cb2431;
+    }
+    .tip {
+      background: #f0fff4;
+      border-left-color: #28a745;
+    }
+    .note { border-left-color: #0366d6; }
+    
+    .emoji { margin-right: 0.3rem; }
+    
+    /* Component list */
+    .components {
+      background: #f6f8fa;
+      border: 1px solid #e1e4e8;
+      border-radius: 6px;
+      padding: 1rem 1.2rem;
+      margin: 1rem 0;
+    }
+    .components ul {
+      margin: 0;
+      padding-left: 1.2rem;
+    }
+    
+    /* Implementation steps */
+    .steps ol {
+      counter-reset: step;
+      list-style: none;
+      padding-left: 0;
+    }
+    .steps li {
+      position: relative;
+      padding-left: 2rem;
+      margin: 0.8rem 0;
+    }
+    .steps li::before {
+      content: counter(step);
+      counter-increment: step;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1.5rem;
+      height: 1.5rem;
+      background: #0366d6;
+      color: white;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 1.5rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    
+    /* Connection steps */
+    .connection-steps ol {
+      counter-reset: step;
+      list-style: none;
+      padding-left: 0;
+    }
+    .connection-steps li {
+      position: relative;
+      padding-left: 2rem;
+      margin: 0.5rem 0;
+    }
+    .connection-steps li::before {
+      content: counter(step);
+      counter-increment: step;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1.5rem;
+      height: 1.5rem;
+      background: #0366d6;
+      color: white;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 1.5rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    
+    /* Related posts */
+    .related-posts {
+      margin: 2rem 0;
+      padding: 1rem;
+      background: #f6f8fa;
+      border-radius: 6px;
+    }
+    .related-posts h3 {
+      margin-top: 0;
+      font-size: 1.1rem;
+    }
+    .related-posts ul {
+      margin: 0.5rem 0 0 1.5rem;
+    }
+    .related-posts li {
+      margin: 0.3rem 0;
+      list-style-type: none;
+    }
+    .related-posts li::before {
+      content: "•";
+      color: #0366d6;
+      font-weight: bold;
+      display: inline-block;
+      width: 1em;
+      margin-left: -1em;
+    }
+    
+    @media (max-width: 600px) {
+      body { padding: 1rem; }
+      h1 { font-size: 1.6rem; }
+      h2 { font-size: 1.3rem; }
+      pre { font-size: 0.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+<article>
+  <h1>Погодная станция на базе ESP32</h1>
+  
+  <p><strong>Описание проекта:</strong> Цель данного проекта — создание погодной станции с использованием микроконтроллера <strong>ESP32</strong>, которая будет собирать данные о температуре, влажности, давлении и уровне освещенности. Эти данные будут отображаться на экране и могут быть переданы на веб-сервер для удаленного мониторинга. Также возможно создание мобильного приложения для получения этих данных в реальном времени.</p>
+
+  <h2>Основные компоненты</h2>
+  
+  <div class="components">
+    <ol>
+      <li><strong>ESP32</strong> — для обработки данных и подключения к Wi-Fi</li>
+      <li><strong>Датчик температуры и влажности DHT22</strong> — для измерения температуры и влажности</li>
+      <li><strong>Датчик давления BMP180 или BME280</strong> — для измерения атмосферного давления</li>
+      <li><strong>Датчик освещенности (LDR или BH1750)</strong> — для измерения уровня освещенности</li>
+      <li><strong>OLED экран 0.96″ (I2C)</strong> — для отображения данных о погоде</li>
+      <li><strong>Wi-Fi</strong> — для отправки данных на сервер или облачное хранилище</li>
+      <li><strong>Датчик времени (RTC)</strong> — опционально, для получения точного времени</li>
+    </ol>
+  </div>
+  
+  <div class="tip">
+    <span class="emoji">💡</span><strong>Совет:</strong> Датчик BME280 предпочтительнее BMP180, так как он измеряет не только давление, но и температуру с влажностью — это позволяет использовать один датчик вместо двух.
+  </div>
+
+  <h2>Шаги реализации</h2>
+  
+  <div class="steps">
+    <ol>
+      <li><strong>Сбор данных:</strong>
+        <ul style="margin-top: 0.3rem;">
+          <li>Используйте датчики для измерения температуры, влажности, давления и уровня освещенности</li>
+          <li>Считывайте данные каждые несколько секунд для актуальной информации</li>
+          <li>Реализуйте обработку ошибок при сбое чтения с датчиков</li>
+        </ul>
+      </li>
+      <li><strong>Отображение данных на OLED экране:</strong>
+        <ul style="margin-top: 0.3rem;">
+          <li>Используйте библиотеку Adafruit_SSD1306 для вывода информации</li>
+          <li>Отображайте все параметры в реальном времени с понятной разметкой</li>
+          <li>Добавьте индикаторы состояния (Wi-Fi, ошибки датчиков)</li>
+        </ul>
+      </li>
+      <li><strong>Передача данных на сервер (опционально):</strong>
+        <ul style="margin-top: 0.3rem;">
+          <li>Настройте отправку данных на ThingSpeak, Blynk или собственный сервер</li>
+          <li>Используйте HTTP GET/POST запросы для передачи параметров</li>
+          <li>Реализуйте повторную отправку при потере соединения</li>
+        </ul>
+      </li>
+      <li><strong>Подключение к Wi-Fi:</strong>
+        <ul style="margin-top: 0.3rem;">
+          <li>ESP32 подключается к сети и передаёт данные в облако</li>
+          <li>Добавьте переподключение при разрыве связи</li>
+          <li>Используйте WDT для защиты от зависаний</li>
+        </ul>
+      </li>
+    </ol>
+  </div>
+
+  <h2>Схема подключения</h2>
+  
+  <div class="connection-steps">
+    <ol>
+      <li><strong>DHT22:</strong>
+        <ul style="margin-top: 0.3rem;">
+          <li>VCC → 3.3V</li>
+          <li>GND → GND</li>
+          <li>DATA → GPIO 4</li>
+          <li>Добавьте подтягивающий резистор 10 кОм между DATA и VCC</li>
+        </ul>
+      </li>
+      <li><strong>BME280 / BMP180 (I2C):</strong>
+        <ul style="margin-top: 0.3rem;">
+          <li>VCC → 3.3V</li>
+          <li>GND → GND</li>
+          <li>SCL → GPIO 22</li>
+          <li>SDA → GPIO 21</li>
+        </ul>
+      </li>
+      <li><strong>LDR (фоторезистор):</strong>
+        <ul style="margin-top: 0.3rem;">
+          <li>Один вывод → 3.3V</li>
+          <li>Другой вывод → GPIO 34 (ADC) и через резистор 10 кОм к GND</li>
+        </ul>
+      </li>
+      <li><strong>OLED экран 0.96″ (I2C):</strong>
+        <ul style="margin-top: 0.3rem;">
+          <li>VCC → 3.3V, GND → GND</li>
+          <li>SCL → GPIO 22, SDA → GPIO 21</li>
+        </ul>
+      </li>
+    </ol>
+  </div>
+  
+  <div class="note">
+    <span class="emoji">ℹ️</span><strong>Примечание:</strong> Пины GPIO 21 и 22 используются одновременно для BME280 и OLED — это возможно, так как оба устройства работают по шине I2C и имеют разные адреса.
+  </div>
+
+  <h2>Код для ESP32</h2>
+  
+  <p>Скопируйте приведённый ниже код в Arduino IDE. Замените <code>your_SSID</code>, <code>your_PASSWORD</code> и <code>YOUR_API_KEY</code> на ваши реальные данные.</p>
+  
+  <pre><code>#include &lt;Wire.h&gt;
+#include &lt;Adafruit_Sensor.h&gt;
+#include &lt;Adafruit_BME280.h&gt;
+#include &lt;DHT.h&gt;
+#include &lt;Adafruit_SSD1306.h&gt;
+#include &lt;WiFi.h&gt;
+#include &lt;HTTPClient.h&gt;
+
+// Настройки Wi-Fi
+const char* ssid = "your_SSID";
+const char* password = "your_PASSWORD";
+
+// Настройки для датчиков
+#define DHTPIN 4            // Пин для DHT22
+#define DHTTYPE DHT22       // Тип датчика DHT
+DHT dht(DHTPIN, DHTTYPE);
+
+Adafruit_BME280 bme;         // Объект для работы с BME280
+#define SEALEVELPRESSURE_HPA (1013.25) // Стандартное давление на уровне моря
+
+// Настройки OLED экрана
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+
+// Настройки LDR
+#define LDR_PIN 34          // Пин для LDR (аналоговый вход)
+
+void setup() {
+  Serial.begin(115200);
+
+  // Подключение к Wi-Fi
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.println("Connecting to WiFi...");
+  }
+  Serial.println("Connected to WiFi");
+
+  // Инициализация DHT22
+  dht.begin();
+
+  // Инициализация BME280
+  if (!bme.begin()) {
+    Serial.println("Couldn't find BME280 sensor");
+    while (1);
+  }
+
+  // Инициализация OLED
+  if (!display.begin(SSD1306_I2C_ADDRESS, SCREEN_WIDTH, SCREEN_HEIGHT, &Wire)) {
+    Serial.println(F("SSD1306 allocation failed"));
+    for (;;);
+  }
+  display.clearDisplay();
+
+  // Отображение стартового текста на экране
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(0, 0);
+  display.println(F("Weather Station"));
+  display.display();
+  delay(2000); // Задержка перед первым измерением
+}
+
+void loop() {
+  // Считываем данные с датчиков
+  float h = dht.readHumidity();
+  float t = dht.readTemperature();
+  float p = bme.readPressure() / 100.0F;
+  int ldr = analogRead(LDR_PIN);  // Считываем значение с LDR
+
+  // Если считывание не удалось
+  if (isnan(h) || isnan(t) || isnan(p)) {
+    Serial.println("Failed to read from sensors");
+    return;
+  }
+
+  // Отображаем данные на OLED экране
+  display.clearDisplay();
+  display.setCursor(0, 0);
+  display.print("Temp: ");
+  display.print(t);
+  display.println(" C");
+  display.print("Humidity: ");
+  display.print(h);
+  display.println(" %");
+  display.print("Pressure: ");
+  display.print(p);
+  display.println(" hPa");
+  display.print("Light: ");
+  display.print(ldr);
+  display.println(" LDR");
+
+  display.display();
+
+  // Отправка данных на сервер (опционально)
+  sendDataToServer(t, h, p, ldr);
+
+  delay(5000); // Задержка между измерениями
+}
+
+// Функция для отправки данных на сервер
+void sendDataToServer(float temperature, float humidity, float pressure, int light) {
+  if (WiFi.status() == WL_CONNECTED) {
+    HTTPClient http;
+
+    // URL для отправки данных (например, ThingSpeak)
+    String serverUrl = "https://api.thingspeak.com/update?api_key=YOUR_API_KEY";
+    serverUrl += "&field1=" + String(temperature);
+    serverUrl += "&field2=" + String(humidity);
+    serverUrl += "&field3=" + String(pressure);
+    serverUrl += "&field4=" + String(light);
+
+    http.begin(serverUrl);
+    int httpCode = http.GET();  // Отправляем GET запрос
+    if (httpCode > 0) {
+      Serial.println("Data sent successfully");
+    } else {
+      Serial.println("Error sending data");
+    }
+    http.end();
+  } else {
+    Serial.println("WiFi not connected");
+  }
+}</code></pre>
+
+  <h2>Пояснение к коду</h2>
+  
+  <ol>
+    <li><strong>Wi-Fi подключение:</strong> Мы подключаем ESP32 к сети Wi-Fi с помощью предоставленных SSID и пароля</li>
+    <li><strong>Инициализация датчиков:</strong> Мы инициализируем датчики <strong>DHT22</strong> для измерения температуры и влажности, <strong>BME280</strong> для измерения давления и <strong>LDR</strong> для измерения уровня освещенности</li>
+    <li><strong>OLED экран:</strong> С помощью библиотеки <strong>Adafruit_SSD1306</strong> мы выводим собранные данные на экран</li>
+    <li><strong>Отправка данных на сервер:</strong> Мы используем HTTP GET запрос для отправки данных на сервер (например, сервис <strong>ThingSpeak</strong>). В запрос включены данные о температуре, влажности, давлении и уровне освещенности</li>
+    <li><strong>Интервал измерений:</strong> Измерения проводятся каждые 5 секунд</li>
+  </ol>
+  
+  <div class="warning">
+    <span class="emoji">❗</span><strong>Важно:</strong> Не забудьте установить необходимые библиотеки через менеджер библиотек Arduino IDE: <strong>Adafruit Unified Sensor</strong>, <strong>Adafruit BME280</strong>, <strong>DHT sensor library</strong>, <strong>Adafruit SSD1306</strong>.
+  </div>
+
+  <h2>Как собрать</h2>
+  
+  <div class="steps">
+    <ol>
+      <li><strong>Соединение компонентов:</strong>
+        <ul style="margin-top: 0.3rem;">
+          <li><strong>DHT22:</strong> Подключите вывод Data к пину GPIO 4 на ESP32</li>
+          <li><strong>BME280:</strong> Подключите SDA к GPIO 21, SCL к GPIO 22</li>
+          <li><strong>LDR:</strong> Подключите один конец LDR к 3.3V, а другой к аналоговому пину (например, GPIO 34) через резистор 10 кОм к GND</li>
+          <li><strong>OLED экран:</strong> Подключите SDA к GPIO 21, SCL к GPIO 22</li>
+        </ul>
+      </li>
+      <li><strong>Настройка сервера:</strong>
+        <ul style="margin-top: 0.3rem;">
+          <li>Зарегистрируйтесь на <strong>ThingSpeak</strong> или другом сервере для мониторинга</li>
+          <li>Получите API ключ для отправки данных</li>
+          <li>Настройте каналы для отображения температуры, влажности, давления и освещенности</li>
+        </ul>
+      </li>
+      <li><strong>Запуск:</strong>
+        <ul style="margin-top: 0.3rem;">
+          <li>Загрузите код на ESP32 через Arduino IDE</li>
+          <li>Подключите ESP32 к источнику питания (5В через VIN или 3.3В напрямую)</li>
+          <li>Данные будут отображаться на экране и отправляться на сервер</li>
+        </ul>
+      </li>
+    </ol>
+  </div>
+
+  <h2>Возможные проблемы и решения</h2>
+  
+  <ul>
+    <li><strong>Датчики не определяются:</strong>
+      <ul>
+        <li>Проверьте подключение SDA/SCL и наличие подтягивающих резисторов 4.7 кОм для I2C</li>
+        <li>Убедитесь, что адрес датчика совпадает с ожидаемым (BME280: 0x76 или 0x77)</li>
+        <li>Проверьте питание датчиков (3.3В, не 5В!)</li>
+      </ul>
+    </li>
+    <li><strong>OLED экран не отображает данные:</strong>
+      <ul>
+        <li>Проверьте, правильно ли заданы размеры экрана в коде (128×64)</li>
+        <li>Убедитесь, что библиотека Adafruit_SSD1306 установлена</li>
+        <li>Проверьте, не конфликтуют ли адреса I2C устройств</li>
+      </ul>
+    </li>
+    <li><strong>Данные не отправляются на ThingSpeak:</strong>
+      <ul>
+        <li>Проверьте корректность API ключа и URL запроса</li>
+        <li>Убедитесь, что канал ThingSpeak настроен и имеет свободные поля</li>
+        <li>Проверьте, что лимит отправки (15 секунд) соблюдён</li>
+      </ul>
+    </li>
+    <li><strong>ESP32 перезагружается:</strong>
+      <ul>
+        <li>Добавьте конденсатор 100–470 мкФ между 3.3В и GND рядом с платой</li>
+        <li>Используйте стабильный источник питания 5В/2А</li>
+        <li>Проверьте, не перегружен ли вывод 3.3В на плате</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h2>Идеи для расширения функционала</h2>
+  
+  <ul>
+    <li><strong>Добавление датчика ветра и дождя:</strong> Для полноценной метеостанции</li>
+    <li><strong>Локальное хранение данных:</strong> Используйте microSD модуль для записи истории измерений</li>
+    <li><strong>Веб-интерфейс:</strong> Создайте локальный веб-сервер на ESP32 для просмотра данных в браузере</li>
+    <li><strong>Уведомления:</strong> Настройте отправку предупреждений в Telegram при экстремальных значениях</li>
+    <li><strong>Энергосбережение:</strong> Реализуйте глубокий сон (deep sleep) для работы от батареи</li>
+  </ul>
+  
+  <div class="tip">
+    <span class="emoji">🚀</span><strong>Идея:</strong> Объедините погодную станцию с автоматикой умного дома — например, закрывать окна при дожде или включать увлажнитель при низкой влажности!
+  </div>
+
+  <div class="related-posts">
+    <h3>Похожие записи</h3>
+    <ul>
+      <li><a href="#">BLE-пульт для умного робота с ESP32 и MIT App Inventor</a></li>
+      <li><a href="#">BLE-термостат для умного дома с ESP32 и MIT App Inventor</a></li>
+      <li><a href="#">Управление умной лампой через BLE с помощью ESP32 и MIT App Inventor</a></li>
+    </ul>
+  </div>
+
+</article>
+
+</body>
+</html>
