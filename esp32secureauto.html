@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Система слежения за автомобилем на ESP32</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      color: #24292e;
+      background: #fff;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+    h1 {
+      font-size: 2rem;
+      margin: 1.5rem 0 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid #eaecef;
+      color: #0366d6;
+    }
+    h2 {
+      font-size: 1.5rem;
+      margin: 1.8rem 0 0.8rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid #eaecef;
+      color: #24292e;
+    }
+    h3 {
+      font-size: 1.25rem;
+      margin: 1.2rem 0 0.6rem;
+      color: #24292e;
+    }
+    h4 {
+      font-size: 1.1rem;
+      margin: 1rem 0 0.5rem;
+      color: #24292e;
+    }
+    p { margin: 0.8rem 0; }
+    ul, ol {
+      margin: 0.8rem 0 0.8rem 1.5rem;
+      padding-left: 0.5rem;
+    }
+    li { margin: 0.3rem 0; }
+    a {
+      color: #0366d6;
+      text-decoration: none;
+    }
+    a:hover { text-decoration: underline; }
+    
+    /* Code blocks */
+    pre {
+      background: #f6f8fa;
+      border: 1px solid #e1e4e8;
+      border-radius: 6px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin: 1rem 0;
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      font-size: 0.85rem;
+      line-height: 1.4;
+    }
+    code {
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      background: #f6f8fa;
+      padding: 0.2em 0.4em;
+      border-radius: 3px;
+      font-size: 0.9em;
+    }
+    pre code {
+      background: transparent;
+      padding: 0;
+      font-size: inherit;
+    }
+    
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.95rem;
+    }
+    th, td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid #e1e4e8;
+      text-align: left;
+    }
+    th {
+      background: #f6f8fa;
+      font-weight: 600;
+    }
+    tr:nth-child(even) { background: #fbfcfc; }
+    
+    /* Callout boxes */
+    .note, .warning, .tip {
+      border-left: 4px solid;
+      padding: 0.8rem 1rem;
+      margin: 1rem 0;
+      background: #f1f8ff;
+      border-radius: 0 4px 4px 0;
+    }
+    .warning {
+      background: #fff8f8;
+      border-left-color: #cb2431;
+    }
+    .tip {
+      background: #f0fff4;
+      border-left-color: #28a745;
+    }
+    .note { border-left-color: #0366d6; }
+    
+    .emoji { margin-right: 0.3rem; }
+    
+    /* Component list */
+    .components {
+      background: #f6f8fa;
+      border: 1px solid #e1e4e8;
+      border-radius: 6px;
+      padding: 1rem 1.2rem;
+      margin: 1rem 0;
+    }
+    .components ul {
+      margin: 0;
+      padding-left: 1.2rem;
+    }
+    
+    /* Implementation steps */
+    .steps ol {
+      counter-reset: step;
+      list-style: none;
+      padding-left: 0;
+    }
+    .steps li {
+      position: relative;
+      padding-left: 2rem;
+      margin: 0.8rem 0;
+    }
+    .steps li::before {
+      content: counter(step);
+      counter-increment: step;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1.5rem;
+      height: 1.5rem;
+      background: #0366d6;
+      color: white;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 1.5rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    
+    /* Connection steps */
+    .connection-steps ol {
+      counter-reset: step;
+      list-style: none;
+      padding-left: 0;
+    }
+    .connection-steps li {
+      position: relative;
+      padding-left: 2rem;
+      margin: 0.5rem 0;
+    }
+    .connection-steps li::before {
+      content: counter(step);
+      counter-increment: step;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1.5rem;
+      height: 1.5rem;
+      background: #0366d6;
+      color: white;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 1.5rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    
+    /* Related posts */
+    .related-posts {
+      margin: 2rem 0;
+      padding: 1rem;
+      background: #f6f8fa;
+      border-radius: 6px;
+    }
+    .related-posts h3 {
+      margin-top: 0;
+      font-size: 1.1rem;
+    }
+    .related-posts ul {
+      margin: 0.5rem 0 0 1.5rem;
+    }
+    .related-posts li {
+      margin: 0.3rem 0;
+      list-style-type: none;
+    }
+    .related-posts li::before {
+      content: "•";
+      color: #0366d6;
+      font-weight: bold;
+      display: inline-block;
+      width: 1em;
+      margin-left: -1em;
+    }
+    
+    @media (max-width: 600px) {
+      body { padding: 1rem; }
+      h1 { font-size: 1.6rem; }
+      h2 { font-size: 1.3rem; }
+      pre { font-size: 0.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+<article>
+  <h1>Система слежения за автомобилем на ESP32</h1>
+  
+  <p>Этот проект представляет собой систему слежения за автомобилем на базе <strong>ESP32</strong>, которая использует GPS-модуль для отслеживания местоположения автомобиля и отправляет данные на сервер или мобильное приложение через сотовую связь с использованием <strong>GPRS</strong> или <strong>Wi-Fi</strong>. Система может быть полезной для мониторинга автомобиля, его нахождения в случае кражи, а также для других задач, таких как контроль маршрутов.</p>
+
+  <h2>Компоненты и оборудование</h2>
+  
+  <div class="components">
+    <ul>
+      <li><strong>ESP32</strong> — основной микроконтроллер с встроенным Wi-Fi/Bluetooth</li>
+      <li><strong>GPS модуль (NEO-6M или NEO-M8N)</strong> — для определения точных координат автомобиля</li>
+      <li><strong>GPRS/3G/4G модем (SIM800L или SIM900)</strong> — для передачи данных через сотовую сеть</li>
+      <li><strong>Аккумулятор (Li-Po)</strong> — для автономной работы устройства в автомобиле</li>
+      <li><strong>Кнопка включения/выключения</strong> — для активации или деактивации системы</li>
+      <li><strong>Датчик питания (MOSFET-модуль)</strong> — для контроля и управления питанием</li>
+      <li><strong>Провода и кабели</strong> — для надёжного подключения всех компонентов</li>
+    </ul>
+  </div>
+  
+  <div class="tip">
+    <span class="emoji">💡</span><strong>Совет:</strong> Модуль NEO-M8N обеспечивает более быстрое получение фиксированных координат и лучшую чувствительность по сравнению с NEO-6M — рекомендуем его для автомобильных применений.
+  </div>
+
+  <h2>Схема подключения компонентов</h2>
+  
+  <div class="connection-steps">
+    <ol>
+      <li><strong>GPS модуль (NEO-6M/NEO-M8N) через UART:</strong>
+        <ul style="margin-top: 0.3rem;">
+          <li>VCC → 3.3V или 5V (зависит от модели)</li>
+          <li>GND → GND</li>
+          <li>TX → GPIO 4 (RX ESP32)</li>
+          <li>RX → GPIO 5 (TX ESP32)</li>
+        </ul>
+      </li>
+      <li><strong>GPRS модем (SIM800L) через UART:</strong>
+        <ul style="margin-top: 0.3rem;">
+          <li>VCC → 4.0–4.2V (требует стабильного питания!)</li>
+          <li>GND → GND (общий с ESP32)</li>
+          <li>TX → GPIO 16 (RX ESP32)</li>
+          <li>RX → GPIO 17 (TX ESP32, через делитель 3.3В)</li>
+          <li>PWRKEY → GPIO 9 (для включения/выключения модема)</li>
+          <li>RST → GPIO 8 (опционально, для перезагрузки)</li>
+        </ul>
+      </li>
+      <li><strong>Кнопка включения:</strong>
+        <ul style="margin-top: 0.3rem;">
+          <li>Один контакт → GND</li>
+          <li>Другой контакт → GPIO 12 и через резистор 10 кОм к 3.3В</li>
+        </ul>
+      </li>
+      <li><strong>Питание:</strong>
+        <ul style="margin-top: 0.3rem;">
+          <li>Li-Po аккумулятор → через DC-DC преобразователь к 5В/3.3В шине</li>
+          <li>Добавьте конденсатор 1000 мкФ рядом с SIM800L для компенсации пиков тока</li>
+        </ul>
+      </li>
+    </ol>
+  </div>
+  
+  <div class="warning">
+    <span class="emoji">⚠️</span><strong>Важно:</strong> Модуль SIM800L потребляет до 2А в пике при передаче данных — используйте качественный источник питания и толстые провода, иначе модем будет перезагружаться.
+  </div>
+
+  <h2>Установка необходимых библиотек</h2>
+  
+  <div class="steps">
+    <ol>
+      <li>Откройте Arduino IDE</li>
+      <li>Перейдите в <strong>Скетч → Подключить библиотеку → Управление библиотеками</strong></li>
+      <li>Установите следующие библиотеки:
+        <ul style="margin-top: 0.3rem;">
+          <li><strong>TinyGPS++</strong> — для парсинга NMEA-данных с GPS</li>
+          <li><strong>Adafruit FONA</strong> — для работы с модулями SIM800/SIM900</li>
+          <li><strong>SoftwareSerial</strong> — для создания дополнительных UART-портов (если не используете аппаратные)</li>
+        </ul>
+      </li>
+    </ol>
+  </div>
+  
+  <div class="note">
+    <span class="emoji">ℹ️</span><strong>Примечание:</strong> На ESP32 предпочтительнее использовать аппаратные UART (Serial1, Serial2), так как SoftwareSerial может работать нестабильно на высоких скоростях.
+  </div>
+
+  <h2>Код для ESP32</h2>
+  
+  <p>Скопируйте приведённый ниже код в Arduino IDE. Замените <code>your_APN</code>, <code>your_PIN</code> и <code>your_server_URL</code> на ваши реальные данные.</p>
+  
+  <pre><code>#include &lt;TinyGPS++.h&gt;
+#include &lt;HardwareSerial.h&gt;
+#include &lt;Adafruit_FONA.h&gt;
+
+// ========== НАСТРОЙКИ ==========
+// Пины для GPS модуля (UART2)
+#define GPS_RX 4
+#define GPS_TX 5
+
+// Пины для GPRS модуля (UART1)
+#define FONA_RX 16
+#define FONA_TX 17
+#define FONA_RST 8
+#define FONA_PWRKEY 9
+
+// Настройки SIM-карты
+#define FONA_PIN "1234"           // PIN-код вашей SIM-карты (если есть)
+#define APN "internet"            // APN вашего оператора (МТС: internet.mts.ru)
+
+// Сервер для отправки данных
+const char* serverURL = "http://yourserver.com/update";
+
+// Кнопка включения системы
+const int buttonPin = 12;
+
+// ========== ОБЪЕКТЫ ==========
+TinyGPSPlus gps;
+HardwareSerial gpsSerial(2);      // UART2 для GPS
+HardwareSerial fonaSerial(1);     // UART1 для GPRS
+Adafruit_FONA fona = Adafruit_FONA(FONA_RST);
+
+bool systemActive = false;
+unsigned long lastSend = 0;
+const unsigned long sendInterval = 60000; // Отправка каждые 60 секунд
+
+void setup() {
+  Serial.begin(115200);
+  
+  // Инициализация UART для GPS
+  gpsSerial.begin(9600, SERIAL_8N1, GPS_RX, GPS_TX);
+  
+  // Инициализация UART для GPRS
+  fonaSerial.begin(9600, SERIAL_8N1, FONA_RX, FONA_TX);
+  
+  // Инициализация кнопки
+  pinMode(buttonPin, INPUT_PULLUP);
+  
+  // Инициализация FONA модуля
+  Serial.println(F("Инициализация GPRS модуля..."));
+  if (!fona.begin(fonaSerial)) {
+    Serial.println(F("❌ Не удалось подключиться к модему"));
+    while (1);
+  }
+  Serial.println(F("✅ Модем подключён"));
+  
+  // Ввод PIN-кода (если требуется)
+  if (strlen(FONA_PIN) > 0) {
+    fona.enablePIN(FONA_PIN);
+  }
+  
+  // Настройка GPRS
+  fona.setGPRSNetworkSettings(APN);
+  
+  Serial.println(F("Система готова. Нажмите кнопку для старта."));
+}
+
+void loop() {
+  // Обработка кнопки (активное низкое состояние)
+  if (digitalRead(buttonPin) == LOW) {
+    systemActive = !systemActive;
+    Serial.println(systemActive ? F("🔵 Система АКТИВИРОВАНА") : F("🔴 Система ДЕЗАКТИВИРОВАНА"));
+    delay(500); // Защита от дребезга
+  }
+  
+  // Если система активна — обрабатываем GPS и отправляем данные
+  if (systemActive) {
+    // Чтение данных с GPS
+    while (gpsSerial.available() > 0) {
+      gps.encode(gpsSerial.read());
+    }
+    
+    // Если координаты обновились и прошло время с последней отправки
+    if (gps.location.isUpdated() && (millis() - lastSend >= sendInterval)) {
+      double lat = gps.location.lat();
+      double lng = gps.location.lng();
+      float speed = gps.speed.kmph();
+      uint32_t satellites = gps.satellites.value();
+      
+      Serial.printf("📍 Координаты: %.6f, %.6f | Скорость: %.1f км/ч | Спутники: %d\n", 
+                    lat, lng, speed, satellites);
+      
+      // Отправка на сервер
+      if (sendLocationToServer(lat, lng, speed)) {
+        lastSend = millis();
+        Serial.println(F("✅ Данные отправлены"));
+      } else {
+        Serial.println(F("❌ Ошибка отправки"));
+      }
+    }
+  }
+  
+  delay(100);
+}
+
+// Функция отправки данных на сервер через HTTP POST
+bool sendLocationToServer(double latitude, double longitude, float speed) {
+  // Формируем тело запроса
+  String postData = "lat=" + String(latitude, 6) + 
+                    "&lon=" + String(longitude, 6) + 
+                    "&speed=" + String(speed, 1);
+  
+  // Отправляем HTTP POST запрос
+  uint16_t statuscode;
+  int16_t length;
+  
+  if (!fona.HTTP_POST_start(serverURL, F("application/x-www-form-urlencoded"), 
+                           (uint8_t *)postData.c_str(), postData.length(), 
+                           &statuscode, (uint16_t *)&length)) {
+    return false;
+  }
+  
+  fona.HTTP_POST_end();
+  return (statuscode == 200);
+}</code></pre>
+
+  <h2>Пояснение к коду</h2>
+  
+  <ol>
+    <li><strong>Инициализация UART:</strong> Используем два аппаратных UART-порта: UART2 для GPS (9600 бод) и UART1 для GPRS-модема</li>
+    <li><strong>Обработка кнопки:</strong> Система активируется/деактивируется нажатием кнопки на GPIO 12 (с подтяжкой к 3.3В)</li>
+    <li><strong>Чтение GPS:</strong> Библиотека TinyGPS++ парсит NMEA-строки и предоставляет готовые координаты, скорость, количество спутников</li>
+    <li><strong>Отправка данных:</strong> Данные отправляются на сервер каждые 60 секунд через HTTP POST запрос с использованием FONA-библиотеки</li>
+    <li><strong>Защита от частой отправки:</strong> Переменная <code>lastSend</code> предотвращает перегрузку сети и экономию трафика</li>
+  </ol>
+  
+  <div class="tip">
+    <span class="emoji">🔧</span><strong>Совет:</strong> Для отладки используйте монитор последовательного порта (115200 бод) — там выводятся все координаты и статусы отправки.
+  </div>
+
+  <h2>Настройка сервера для приёма данных</h2>
+  
+  <p>Пример простого PHP-скрипта для приёма и сохранения координат на сервере:</p>
+  
+  <pre><code>&lt;?php
+// save_location.php
+$lat = $_POST['lat'] ?? '';
+$lon = $_POST['lon'] ?? '';
+$speed = $_POST['speed'] ?? '';
+$timestamp = date('Y-m-d H:i:s');
+
+if ($lat &amp;&amp; $lon) {
+  // Сохранение в файл (для простоты)
+  $log = "$timestamp | $lat, $lon | ${speed}km/h\n";
+  file_put_contents('tracker.log', $log, FILE_APPEND);
+  
+  // Или сохранение в базу данных:
+  // $pdo = new PDO('mysql:host=localhost;dbname=tracker', 'user', 'pass');
+  // $stmt = $pdo->prepare("INSERT INTO locations (lat, lon, speed, timestamp) VALUES (?, ?, ?, ?)");
+  // $stmt->execute([$lat, $lon, $speed, $timestamp]);
+  
+  http_response_code(200);
+  echo "OK";
+} else {
+  http_response_code(400);
+  echo "Missing parameters";
+}
+?&gt;</code></pre>
+
+  <h2>Тестирование и оптимизация</h2>
+  
+  <div class="steps">
+    <ol>
+      <li><strong>Проверка GPS:</strong>
+        <ul style="margin-top: 0.3rem;">
+          <li>Разместите антенну GPS на открытом месте (не в металлическом корпусе)</li>
+          <li>Дождитесь получения фиксированных координат (может занять 1–5 минут)</li>
+          <li>Проверьте количество спутников в мониторе порта (минимум 4 для 3D-фиксации)</li>
+        </ul>
+      </li>
+      <li><strong>Проверка GPRS:</strong>
+        <ul style="margin-top: 0.3rem;">
+          <li>Убедитесь, что SIM-карта активна и имеет баланс/трафик</li>
+          <li>Проверьте правильность APN для вашего оператора</li>
+          <li>Протестируйте отправку данных на тестовый сервер (например, httpbin.org/post)</li>
+        </ul>
+      </li>
+      <li><strong>Оптимизация энергопотребления:</strong>
+        <ul style="margin-top: 0.3rem;">
+          <li>Используйте deep sleep ESP32 между отправлениями данных</li>
+          <li>Отключайте GPS-модуль через пин VCC_EN при неактивности</li>
+          <li>Настройте интервал отправки в зависимости от задачи (1–10 минут)</li>
+        </ul>
+      </li>
+    </ol>
+  </div>
+
+  <h2>Возможные проблемы и решения</h2>
+  
+  <ul>
+    <li><strong>GPS не находит спутники:</strong>
+      <ul>
+        <li>Разместите антенну на крыше автомобиля или у окна</li>
+        <li>Проверьте подключение антенны к модулю (разъём U.FL)</li>
+        <li>Убедитесь, что модуль не экранирован металлическим корпусом</li>
+      </ul>
+    </li>
+    <li><strong>SIM800L не подключается к сети:</strong>
+      <ul>
+        <li>Проверьте питание: напряжение должно быть 4.0–4.2В, ток до 2А</li>
+        <li>Убедитесь, что SIM-карта разблокирована и не требует PUK</li>
+        <li>Проверьте уровень сигнала командой <code>AT+CSQ</code> (значение &gt;10 желательно)</li>
+      </ul>
+    </li>
+    <li><strong>Данные не доходят до сервера:</strong>
+      <ul>
+        <li>Проверьте URL сервера и метод запроса (POST/GET)</li>
+        <li>Убедитесь, что сервер принимает запросы с мобильного IP</li>
+        <li>Добавьте логирование ответа сервера в код для отладки</li>
+      </ul>
+    </li>
+    <li><strong>ESP32 перезагружается:</strong>
+      <ul>
+        <li>Добавьте конденсатор 1000 мкФ параллельно питанию SIM800L</li>
+        <li>Используйте отдельный стабилизатор 3.3В для ESP32</li>
+        <li>Проверьте, не перегружен ли вывод 3.3В на плате</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h2>Идеи для расширения функционала</h2>
+  
+  <ul>
+    <li><strong>Геозоны:</strong> Настройте уведомления при въезде/выезде из заданной области</li>
+    <li><strong>Датчик зажигания:</strong> Подключите вход к цепи зажигания для отслеживания работы двигателя</li>
+    <li><strong>Акселерометр:</strong> Добавьте MPU6050 для обнаружения ударов и эвакуации автомобиля</li>
+    <li><strong>Telegram-уведомления:</strong> Отправляйте координаты в чат при срабатывании тревоги</li>
+    <li><strong>Веб-карта:</strong> Интегрируйте с Leaflet/Google Maps для визуализации маршрута в реальном времени</li>
+    <li><strong>Резервное копирование:</strong> Сохраняйте координаты на microSD при потере связи с сервером</li>
+  </ul>
+  
+  <div class="tip">
+    <span class="emoji">🚀</span><strong>Идея:</strong> Объедините систему с датчиком наклона и микрофоном — при попытке эвакуации или разбития стекла система отправит координаты и включит запись звука!
+  </div>
+
+  <div class="related-posts">
+    <h3>Похожие записи</h3>
+    <ul>
+      <li><a href="#">BLE-пульт для умного робота с ESP32 и MIT App Inventor</a></li>
+      <li><a href="#">BLE-термостат для умного дома с ESP32 и MIT App Inventor</a></li>
+      <li><a href="#">Управление умной лампой через BLE с помощью ESP32 и MIT App Inventor</a></li>
+    </ul>
+  </div>
+
+</article>
+
+</body>
+</html>
