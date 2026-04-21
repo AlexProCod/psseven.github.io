@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Эффективная система обмена с использованием MQTT на ESP32</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      color: #24292e;
+      background: #fff;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+    h1 {
+      font-size: 2rem;
+      margin: 1.5rem 0 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid #eaecef;
+      color: #0366d6;
+    }
+    h2 {
+      font-size: 1.5rem;
+      margin: 1.8rem 0 0.8rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid #eaecef;
+      color: #24292e;
+    }
+    h3 {
+      font-size: 1.25rem;
+      margin: 1.2rem 0 0.6rem;
+      color: #24292e;
+    }
+    h4 {
+      font-size: 1.1rem;
+      margin: 1rem 0 0.5rem;
+      color: #24292e;
+    }
+    p { margin: 0.8rem 0; }
+    ul, ol {
+      margin: 0.8rem 0 0.8rem 1.5rem;
+      padding-left: 0.5rem;
+    }
+    li { margin: 0.3rem 0; }
+    a {
+      color: #0366d6;
+      text-decoration: none;
+    }
+    a:hover { text-decoration: underline; }
+    
+    /* Code blocks */
+    pre {
+      background: #f6f8fa;
+      border: 1px solid #e1e4e8;
+      border-radius: 6px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin: 1rem 0;
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      font-size: 0.85rem;
+      line-height: 1.4;
+    }
+    code {
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      background: #f6f8fa;
+      padding: 0.2em 0.4em;
+      border-radius: 3px;
+      font-size: 0.9em;
+    }
+    pre code {
+      background: transparent;
+      padding: 0;
+      font-size: inherit;
+    }
+    
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.95rem;
+    }
+    th, td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid #e1e4e8;
+      text-align: left;
+    }
+    th {
+      background: #f6f8fa;
+      font-weight: 600;
+    }
+    tr:nth-child(even) { background: #fbfcfc; }
+    
+    /* Callout boxes */
+    .note, .warning, .tip {
+      border-left: 4px solid;
+      padding: 0.8rem 1rem;
+      margin: 1rem 0;
+      background: #f1f8ff;
+      border-radius: 0 4px 4px 0;
+    }
+    .warning {
+      background: #fff8f8;
+      border-left-color: #cb2431;
+    }
+    .tip {
+      background: #f0fff4;
+      border-left-color: #28a745;
+    }
+    .note { border-left-color: #0366d6; }
+    
+    .emoji { margin-right: 0.3rem; }
+    
+    /* Component list */
+    .components {
+      background: #f6f8fa;
+      border: 1px solid #e1e4e8;
+      border-radius: 6px;
+      padding: 1rem 1.2rem;
+      margin: 1rem 0;
+    }
+    .components ul {
+      margin: 0;
+      padding-left: 1.2rem;
+    }
+    
+    /* Connection steps */
+    .connection-steps ol {
+      counter-reset: step;
+      list-style: none;
+      padding-left: 0;
+    }
+    .connection-steps li {
+      position: relative;
+      padding-left: 2rem;
+      margin: 0.5rem 0;
+    }
+    .connection-steps li::before {
+      content: counter(step);
+      counter-increment: step;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1.5rem;
+      height: 1.5rem;
+      background: #0366d6;
+      color: white;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 1.5rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    
+    /* Related posts */
+    .related-posts {
+      margin: 2rem 0;
+      padding: 1rem;
+      background: #f6f8fa;
+      border-radius: 6px;
+    }
+    .related-posts h3 {
+      margin-top: 0;
+      font-size: 1.1rem;
+    }
+    .related-posts ul {
+      margin: 0.5rem 0 0 1.5rem;
+    }
+    .related-posts li {
+      margin: 0.3rem 0;
+      list-style-type: none;
+    }
+    .related-posts li::before {
+      content: "•";
+      color: #0366d6;
+      font-weight: bold;
+      display: inline-block;
+      width: 1em;
+      margin-left: -1em;
+    }
+    
+    @media (max-width: 600px) {
+      body { padding: 1rem; }
+      h1 { font-size: 1.6rem; }
+      h2 { font-size: 1.3rem; }
+      pre { font-size: 0.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+<article>
+  <h1>Эффективная система обмена с использованием MQTT на ESP32</h1>
+  
+  <p>Использование <strong>MQTT</strong> на <strong>ESP32</strong> позволяет создать эффективную систему обмена сообщениями между устройствами в умном доме или IoT-проектах. MQTT (Message Queuing Telemetry Transport) — это легкий протокол обмена сообщениями, который идеально подходит для работы в ограниченных по мощности устройствах, таких как ESP32.</p>
+  
+  <p>В этом руководстве мы рассмотрим, как настроить MQTT на ESP32 и как использовать его для общения с другими устройствами, такими как серверы или платформы, например, <strong>Home Assistant</strong>.</p>
+
+  <h2>Шаги для использования MQTT на ESP32</h2>
+
+  <h3>1. Подключение ESP32 к Wi-Fi</h3>
+  
+  <p>Для начала необходимо подключить ESP32 к вашей Wi-Fi сети. Для этого используем стандартные библиотеки Arduino для ESP32.</p>
+  
+  <pre><code>#include &lt;WiFi.h&gt;
+
+const char* ssid = "your_SSID";       // Имя вашей Wi-Fi сети
+const char* password = "your_PASSWORD"; // Пароль от Wi-Fi сети
+
+void setup() {
+  Serial.begin(115200);
+  WiFi.begin(ssid, password);   // Подключаемся к Wi-Fi
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.println("Connecting to WiFi...");
+  }
+
+  Serial.println("Connected to WiFi");
+}
+
+void loop() {
+  // Ваш код
+}</code></pre>
+
+  <h3>2. Установка библиотеки MQTT</h3>
+  
+  <p>Для работы с MQTT на ESP32 нужно использовать библиотеку <strong>PubSubClient</strong>, которая является одной из самых популярных для работы с MQTT.</p>
+  
+  <div class="connection-steps">
+    <ol>
+      <li>Откройте Arduino IDE</li>
+      <li>Перейдите в <strong>Sketch → Include Library → Manage Libraries</strong></li>
+      <li>Найдите библиотеку <strong>PubSubClient</strong> и установите её</li>
+    </ol>
+  </div>
+  
+  <div class="tip">
+    <span class="emoji">💡</span><strong>Совет:</strong> Также можно установить библиотеку вручную, скачав её с <a href="https://github.com/knolleary/pubsubclient">GitHub</a> и добавив через <em>Sketch → Include Library → Add .ZIP Library</em>.
+  </div>
+
+  <h3>3. Подключение ESP32 к MQTT брокеру</h3>
+  
+  <p>Чтобы ESP32 мог отправлять и получать сообщения, вам нужно подключиться к <strong>MQTT брокеру</strong>. Брокер — это сервер, через который будут передаваться все сообщения. Вы можете использовать публичные MQTT брокеры, такие как <strong>CloudMQTT</strong>, <strong>Mosquitto</strong>, или настроить свой собственный.</p>
+  
+  <p>В примере кода мы будем использовать MQTT брокер с адресом <code>test.mosquitto.org</code> (публичный тестовый брокер).</p>
+  
+  <pre><code>#include &lt;WiFi.h&gt;
+#include &lt;PubSubClient.h&gt;
+
+const char* ssid = "your_SSID";         // Имя вашей Wi-Fi сети
+const char* password = "your_PASSWORD"; // Пароль от Wi-Fi сети
+const char* mqtt_server = "test.mosquitto.org"; // Адрес MQTT брокера
+
+WiFiClient espClient;
+PubSubClient client(espClient);
+
+void setup() {
+  Serial.begin(115200);
+  WiFi.begin(ssid, password);  // Подключаемся к Wi-Fi
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.println("Connecting to WiFi...");
+  }
+
+  Serial.println("Connected to WiFi");
+
+  client.setServer(mqtt_server, 1883);  // Устанавливаем сервер MQTT
+  client.setCallback(callback);         // Устанавливаем функцию для обработки входящих сообщений
+}
+
+void loop() {
+  if (!client.connected()) {
+    reconnect();  // Подключаемся к MQTT брокеру, если потеряли соединение
+  }
+
+  client.loop();  // Обработка входящих сообщений
+}
+
+void reconnect() {
+  // Подключаемся к MQTT брокеру
+  while (!client.connected()) {
+    if (client.connect("ESP32Client")) {  // Имя клиента может быть любым
+      Serial.println("Connected to MQTT Broker");
+      client.subscribe("home/esp32/light"); // Подписываемся на топик
+    } else {
+      delay(5000);  // Пробуем подключиться каждые 5 секунд
+    }
+  }
+}
+
+// Функция для обработки входящих сообщений
+void callback(char* topic, byte* payload, unsigned int length) {
+  Serial.print("Message arrived [");
+  Serial.print(topic);
+  Serial.print("] ");
+  for (int i = 0; i < length; i++) {
+    Serial.print((char)payload[i]);
+  }
+  Serial.println();
+
+  // Пример реакции на сообщение
+  if (strcmp(topic, "home/esp32/light") == 0) {
+    if (payload[0] == '1') {
+      // Включить свет
+      Serial.println("Light ON");
+    } else {
+      // Выключить свет
+      Serial.println("Light OFF");
+    }
+  }
+}</code></pre>
+
+  <div class="note">
+    <span class="emoji">ℹ️</span><strong>Примечание:</strong> Порт <code>1883</code> — стандартный порт для незащищённого MQTT-соединения. Для защищённого соединения (MQTT over SSL/TLS) используйте порт <code>8883</code>.
+  </div>
+
+  <h3>4. Отправка сообщений в MQTT топик</h3>
+  
+  <p>Для отправки сообщений в топики используем метод <code>client.publish()</code>. Это позволяет публиковать сообщения в любой топик на брокере, и они будут доступны для подписчиков.</p>
+  
+  <pre><code>client.publish("home/esp32/light", "1"); // Отправка сообщения о включении света</code></pre>
+  
+  <div class="tip">
+    <span class="emoji">🔧</span><strong>Совет:</strong> Используйте иерархическую структуру топиков, например: <code>home/room1/light</code>, <code>home/room1/temperature</code> — это упрощает управление и фильтрацию сообщений.
+  </div>
+
+  <h3>5. Управление устройствами с помощью MQTT</h3>
+  
+  <p>Допустим, у вас есть устройство, которое может реагировать на команды, получаемые через MQTT. Например, вы можете использовать MQTT для включения или выключения света, или управления любым другим устройством.</p>
+  
+  <pre><code>void callback(char* topic, byte* payload, unsigned int length) {
+  if (strcmp(topic, "home/esp32/light") == 0) {
+    if (payload[0] == '1') {
+      // Включить свет
+      digitalWrite(LED_BUILTIN, HIGH); // Включаем встроенный светодиод как пример
+      Serial.println("Light ON");
+    } else {
+      // Выключить свет
+      digitalWrite(LED_BUILTIN, LOW);  // Выключаем светодиод
+      Serial.println("Light OFF");
+    }
+  }
+}</code></pre>
+
+  <h3>6. Интеграция с Home Assistant</h3>
+  
+  <p>Чтобы интегрировать ESP32 с <strong>Home Assistant</strong>, нужно использовать MQTT как протокол обмена данными.</p>
+  
+  <div class="connection-steps">
+    <ol>
+      <li>Установите MQTT брокер на Home Assistant (например, <strong>Mosquitto</strong>)</li>
+      <li>Подключите ESP32 к тому же MQTT брокеру</li>
+      <li>В <code>configuration.yaml</code> Home Assistant добавьте устройства</li>
+    </ol>
+  </div>
+  
+  <p>Пример конфигурации YAML для создания переключателя:</p>
+  
+  <pre><code>mqtt:
+  broker: "IP_адрес_MQTT_брокера"
+
+switch:
+  - platform: mqtt
+    name: "ESP32 Light"
+    state_topic: "home/esp32/light"
+    command_topic: "home/esp32/light/set"
+    payload_on: "1"
+    payload_off: "0"</code></pre>
+  
+  <p>Теперь вы можете управлять устройствами ESP32 через интерфейс Home Assistant или голосовые команды, если интегрированы с Amazon Alexa или Google Home.</p>
+  
+  <div class="warning">
+    <span class="emoji">❗</span><strong>Важно:</strong> Убедитесь, что топик <code>command_topic</code> в конфигурации Home Assistant совпадает с топиком, на который подписан ваш ESP32, иначе команды не будут поступать на устройство.
+  </div>
+
+  <h2>Возможные проблемы и решения</h2>
+  
+  <ul>
+    <li><strong>ESP32 не подключается к брокеру:</strong>
+      <ul>
+        <li>Проверьте правильность адреса и порта брокера</li>
+        <li>Убедитесь, что брокер доступен из вашей сети (проверьте фаервол)</li>
+        <li>Проверьте подключение ESP32 к Wi-Fi (монитор последовательного порта)</li>
+      </ul>
+    </li>
+    <li><strong>Сообщения не принимаются:</strong>
+      <ul>
+        <li>Убедитесь, что топик в <code>subscribe()</code> совпадает с публикуемым</li>
+        <li>Проверьте, вызывается ли <code>client.loop()</code> в <code>loop()</code></li>
+        <li>Убедитесь, что клиент успешно подключился (проверьте вывод <code>reconnect()</code>)</li>
+      </ul>
+    </li>
+    <li><strong>Home Assistant не видит устройство:</strong>
+      <ul>
+        <li>Проверьте синтаксис <code>configuration.yaml</code> (используйте проверку конфигурации в HA)</li>
+        <li>Убедитесь, что брокер MQTT запущен и доступен</li>
+        <li>Проверьте права доступа к топикам в настройках брокера</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h2>Заключение</h2>
+  
+  <p>Использование <strong>MQTT</strong> на <strong>ESP32</strong> — это мощный способ интеграции устройства с другими компонентами системы умного дома. Он позволяет организовать гибкое и масштабируемое решение для обмена данными между устройствами и сервисами, такими как <strong>Home Assistant</strong>, и использовать его для управления такими устройствами, как свет, датчики, замки и многое другое.</p>
+  
+  <div class="tip">
+    <span class="emoji">🚀</span><strong>Идея для развития:</strong> Добавьте аутентификацию (логин/пароль) в подключение к брокеру и используйте TLS-шифрование для повышения безопасности вашей системы умного дома!
+  </div>
+
+  <div class="related-posts">
+    <h3>Похожие записи</h3>
+    <ul>
+      <li><a href="#">Широкие возможности ESP32 в умном доме</a></li>
+      <li><a href="#">Веб-сервер температуры и влажности на ESP32 и DHT11/DHT22</a></li>
+      <li><a href="#">Управляем выходами через веб-сервер на ESP32</a></li>
+    </ul>
+  </div>
+
+</article>
+
+</body>
+</html>
