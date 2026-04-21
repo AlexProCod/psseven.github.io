@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Умная система мониторинга качества воздуха с машинным обучением</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      color: #24292e;
+      background: #fff;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+    h1 {
+      font-size: 2rem;
+      margin: 1.5rem 0 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid #eaecef;
+      color: #0366d6;
+    }
+    h2 {
+      font-size: 1.5rem;
+      margin: 1.8rem 0 0.8rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid #eaecef;
+      color: #24292e;
+    }
+    h3 {
+      font-size: 1.25rem;
+      margin: 1.2rem 0 0.6rem;
+      color: #24292e;
+    }
+    h4 {
+      font-size: 1.1rem;
+      margin: 1rem 0 0.5rem;
+      color: #24292e;
+    }
+    p { margin: 0.8rem 0; }
+    ul, ol {
+      margin: 0.8rem 0 0.8rem 1.5rem;
+      padding-left: 0.5rem;
+    }
+    li { margin: 0.3rem 0; }
+    a {
+      color: #0366d6;
+      text-decoration: none;
+    }
+    a:hover { text-decoration: underline; }
+    
+    /* Code blocks */
+    pre {
+      background: #f6f8fa;
+      border: 1px solid #e1e4e8;
+      border-radius: 6px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin: 1rem 0;
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      font-size: 0.85rem;
+      line-height: 1.4;
+    }
+    code {
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      background: #f6f8fa;
+      padding: 0.2em 0.4em;
+      border-radius: 3px;
+      font-size: 0.9em;
+    }
+    pre code {
+      background: transparent;
+      padding: 0;
+      font-size: inherit;
+    }
+    
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.95rem;
+    }
+    th, td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid #e1e4e8;
+      text-align: left;
+    }
+    th {
+      background: #f6f8fa;
+      font-weight: 600;
+    }
+    tr:nth-child(even) { background: #fbfcfc; }
+    
+    /* Callout boxes */
+    .note, .warning, .tip {
+      border-left: 4px solid;
+      padding: 0.8rem 1rem;
+      margin: 1rem 0;
+      background: #f1f8ff;
+      border-radius: 0 4px 4px 0;
+    }
+    .warning {
+      background: #fff8f8;
+      border-left-color: #cb2431;
+    }
+    .tip {
+      background: #f0fff4;
+      border-left-color: #28a745;
+    }
+    .note { border-left-color: #0366d6; }
+    
+    .emoji { margin-right: 0.3rem; }
+    
+    /* Component list */
+    .components {
+      background: #f6f8fa;
+      border: 1px solid #e1e4e8;
+      border-radius: 6px;
+      padding: 1rem 1.2rem;
+      margin: 1rem 0;
+    }
+    .components ul {
+      margin: 0;
+      padding-left: 1.2rem;
+    }
+    
+    /* Implementation steps */
+    .steps ol {
+      counter-reset: step;
+      list-style: none;
+      padding-left: 0;
+    }
+    .steps li {
+      position: relative;
+      padding-left: 2rem;
+      margin: 0.8rem 0;
+    }
+    .steps li::before {
+      content: counter(step);
+      counter-increment: step;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1.5rem;
+      height: 1.5rem;
+      background: #0366d6;
+      color: white;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 1.5rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    
+    /* Related posts */
+    .related-posts {
+      margin: 2rem 0;
+      padding: 1rem;
+      background: #f6f8fa;
+      border-radius: 6px;
+    }
+    .related-posts h3 {
+      margin-top: 0;
+      font-size: 1.1rem;
+    }
+    .related-posts ul {
+      margin: 0.5rem 0 0 1.5rem;
+    }
+    .related-posts li {
+      margin: 0.3rem 0;
+      list-style-type: none;
+    }
+    .related-posts li::before {
+      content: "•";
+      color: #0366d6;
+      font-weight: bold;
+      display: inline-block;
+      width: 1em;
+      margin-left: -1em;
+    }
+    
+    @media (max-width: 600px) {
+      body { padding: 1rem; }
+      h1 { font-size: 1.6rem; }
+      h2 { font-size: 1.3rem; }
+      pre { font-size: 0.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+<article>
+  <h1>Умная система мониторинга качества воздуха с машинным обучением</h1>
+  
+  <p>Создание системы, которая мониторит качество воздуха в помещении и на улице, анализирует данные с помощью машинного обучения и предоставляет рекомендации по улучшению качества воздуха. Эта система может быть полезной для домов, офисов, школ и других помещений, где качество воздуха является важным фактором для здоровья.</p>
+
+  <h2>Необходимые компоненты</h2>
+  
+  <div class="components">
+    <ul>
+      <li><strong>Микроконтроллер ESP32</strong> — встроенный Wi-Fi и Bluetooth, высокая производительность для обработки данных</li>
+      <li><strong>Датчики качества воздуха:</strong>
+        <ul style="margin-top: 0.3rem; margin-left: 1rem;">
+          <li><strong>MQ-135</strong> — измеряет уровень CO₂, NH₃, NOₓ и других газов</li>
+          <li><strong>DHT22</strong> — измеряет температуру и влажность</li>
+          <li><strong>PM2.5 датчик</strong> — измеряет концентрацию мелких частиц в воздухе</li>
+        </ul>
+      </li>
+      <li><strong>Блок питания</strong> — подходящий источник питания для микроконтроллера и датчиков (5В/2А рекомендуется)</li>
+      <li><strong>ЖК-дисплей или OLED-дисплей</strong> — для отображения данных в реальном времени (опционально)</li>
+      <li><strong>Облачная платформа</strong> — например, ThingSpeak для хранения и анализа данных</li>
+    </ul>
+  </div>
+  
+  <div class="tip">
+    <span class="emoji">💡</span><strong>Совет:</strong> Для точных измерений калибруйте датчик MQ-135 в течение 24–48 часов после первого включения — он требует прогрева для стабильных показаний.
+  </div>
+
+  <h2>Шаги реализации</h2>
+  
+  <div class="steps">
+    <ol>
+      <li><strong>Сборка аппаратной части:</strong>
+        <ul style="margin-top: 0.3rem;">
+          <li>Подключите датчики к ESP32 согласно схеме подключения</li>
+          <li>Подключите ЖК-дисплей для отображения данных (опционально)</li>
+          <li>Обеспечьте стабильное питание всех компонентов</li>
+        </ul>
+      </li>
+      <li><strong>Программирование микроконтроллера:</strong>
+        <ul style="margin-top: 0.3rem;">
+          <li>Напишите код на Arduino IDE или MicroPython для считывания данных с датчиков</li>
+          <li>Реализуйте отправку данных на облачную платформу (ThingSpeak, Blynk, MQTT)</li>
+          <li>Используйте библиотеки для работы с датчиками (Adafruit Sensor, DHT library)</li>
+        </ul>
+      </li>
+      <li><strong>Обработка данных и машинное обучение:</strong>
+        <ul style="margin-top: 0.3rem;">
+          <li>Сохраняйте данные на облачной платформе для последующего анализа</li>
+          <li>Используйте Python с библиотеками scikit-learn или TensorFlow для обучения модели</li>
+          <li>Создайте алгоритм, который анализирует данные и предлагает рекомендации по улучшению качества воздуха</li>
+        </ul>
+      </li>
+      <li><strong>Интерфейс пользователя:</strong>
+        <ul style="margin-top: 0.3rem;">
+          <li>Создайте веб-интерфейс или мобильное приложение для отображения данных в реальном времени</li>
+          <li>Добавьте визуализацию трендов и уведомления при ухудшении качества воздуха</li>
+          <li>Реализуйте систему рекомендаций (проветрить помещение, включить очиститель и т.д.)</li>
+        </ul>
+      </li>
+    </ol>
+  </div>
+
+  <h2>Схема подключения датчиков к ESP32</h2>
+  
+  <div class="connection-steps">
+    <ol>
+      <li><strong>DHT22 (температура/влажность):</strong>
+        <ul style="margin-top: 0.3rem;">
+          <li>VCC → 3.3V</li>
+          <li>GND → GND</li>
+          <li>DATA → GPIO 14</li>
+        </ul>
+      </li>
+      <li><strong>MQ-135 (качество воздуха):</strong>
+        <ul style="margin-top: 0.3rem;">
+          <li>VCC → 5V</li>
+          <li>GND → GND</li>
+          <li>AOUT → аналоговый вход GPIO 34 (ADC1_CH6)</li>
+        </ul>
+      </li>
+      <li><strong>PM2.5 датчик (например, PMS5003):</strong>
+        <ul style="margin-top: 0.3rem;">
+          <li>VCC → 5V</li>
+          <li>GND → GND</li>
+          <li>Tx → GPIO 16 (UART2 RX)</li>
+          <li>Rx → GPIO 17 (UART2 TX)</li>
+        </ul>
+      </li>
+      <li><strong>OLED-дисплей (опционально, I2C):</strong>
+        <ul style="margin-top: 0.3rem;">
+          <li>VCC → 3.3V, GND → GND</li>
+          <li>SCL → GPIO 22, SDA → GPIO 21</li>
+        </ul>
+      </li>
+    </ol>
+  </div>
+  
+  <div class="note">
+    <span class="emoji">ℹ️</span><strong>Примечание:</strong> GPIO 34, 35, 36, 39 на ESP32 поддерживают только аналоговый ввод (ADC) и не имеют внутренних подтяжек — используйте внешние резисторы при необходимости.
+  </div>
+
+  <h2>Пример кода: считывание данных и отправка на ThingSpeak</h2>
+  
+  <p>Пример кода на MicroPython для считывания данных с датчиков и отправки их на облачную платформу ThingSpeak:</p>
+  
+  <pre><code>import network
+import urequests
+from machine import Pin, I2C, ADC
+import dht
+import time
+
+# Подключение к Wi-Fi
+ssid = 'your_SSID'
+password = 'your_PASSWORD'
+
+wlan = network.WLAN(network.STA_IF)
+wlan.active(True)
+wlan.connect(ssid, password)
+
+while not wlan.isconnected():
+    pass
+
+print('Connected to WiFi')
+
+# Инициализация датчиков
+dht_sensor = dht.DHT22(Pin(14))
+
+# Аналоговый вход для MQ-135
+mq135 = ADC(Pin(34))
+mq135.atten(ADC.ATTN_11DB)  # Полная шкала 0-3.3В
+
+# I2C для OLED (опционально)
+i2c = I2C(scl=Pin(22), sda=Pin(21))
+
+# URL для отправки данных на ThingSpeak
+thingspeak_url = 'https://api.thingspeak.com/update?api_key=YOUR_API_KEY'
+
+while True:
+    try:
+        # Чтение DHT22
+        dht_sensor.measure()
+        temp = dht_sensor.temperature()
+        hum = dht_sensor.humidity()
+        
+        # Чтение MQ-135 (аналоговое значение)
+        mq_value = mq135.read()
+        # Конвертация в условные единицы качества воздуха (калибровка требуется)
+        air_quality = mq_value / 4095 * 100
+        
+        # Формирование запроса для отправки данных
+        response = urequests.get(
+            thingspeak_url + 
+            f'&field1={temp}' +      # Температура
+            f'&field2={hum}' +       # Влажность
+            f'&field3={air_quality}' # Качество воздуха
+        )
+        print(response.text)
+        response.close()
+        
+    except OSError as e:
+        print('Failed to read sensor:', e)
+    
+    time.sleep(60)  # Отправка данных каждые 60 секунд</code></pre>
+
+  <div class="warning">
+    <span class="emoji">❗</span><strong>Важно:</strong> Датчик MQ-135 требует калибровки в чистом воздухе для точных измерений. Запишите базовое значение в хорошо проветриваемом помещении и используйте его как точку отсчёта.
+  </div>
+
+  <h2>Машинное обучение для анализа данных</h2>
+  
+  <p>После сбора данных на облачной платформе можно приступить к их анализу с помощью машинного обучения:</p>
+  
+  <ul>
+    <li><strong>Подготовка данных:</strong> Экспортируйте данные из ThingSpeak в CSV-формат и очистите их от выбросов</li>
+    <li><strong>Выбор модели:</strong> Для классификации качества воздуха подойдёт Random Forest или нейросеть; для прогнозирования — LSTM или ARIMA</li>
+    <li><strong>Обучение:</strong> Разделите данные на обучающую и тестовую выборки, обучите модель на исторических данных</li>
+    <li><strong>Развёртывание:</strong> Экспортируйте модель в формат TensorFlow Lite для запусков на ESP32 или оставьте обработку на сервере</li>
+  </ul>
+  
+  <pre><code># Пример: простая классификация качества воздуха на Python
+from sklearn.ensemble import RandomForestClassifier
+import pandas as pd
+
+# Загрузка данных
+data = pd.read_csv('air_quality_data.csv')
+
+# Подготовка признаков и целевой переменной
+X = data[['temperature', 'humidity', 'mq135_value', 'pm25']]
+y = data['quality_label']  # 'good', 'moderate', 'poor'
+
+# Обучение модели
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+model.fit(X, y)
+
+# Прогноз для новых данных
+new_data = [[24.5, 45, 1200, 35]]  # temp, hum, mq135, pm2.5
+prediction = model.predict(new_data)
+print(f'Качество воздуха: {prediction[0]}')</code></pre>
+
+  <h2>Возможные проблемы и решения</h2>
+  
+  <ul>
+    <li><strong>Датчики показывают нестабильные значения:</strong>
+      <ul>
+        <li>Дайте датчику MQ-135 прогреться 24–48 часов перед калибровкой</li>
+        <li>Используйте усреднение нескольких измерений для сглаживания шума</li>
+        <li>Размещайте датчики вдали от источников тепла и сквозняков</li>
+      </ul>
+    </li>
+    <li><strong>ESP32 теряет соединение с Wi-Fi:</strong>
+      <ul>
+        <li>Добавьте переподключение в коде при потере соединения</li>
+        <li>Используйте WDT (Watchdog Timer) для перезагрузки при зависании</li>
+        <li>Проверьте стабильность питания (добавьте конденсатор 100 мкФ)</li>
+      </ul>
+    </li>
+    <li><strong>Модель машинного обучения даёт неточные прогнозы:</strong>
+      <ul>
+        <li>Увеличьте объём обучающих данных (минимум несколько недель измерений)</li>
+        <li>Добавьте больше признаков: время суток, день недели, сезон</li>
+        <li>Проведите кросс-валидацию и настройку гиперпараметров</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h2>Заключение</h2>
+  
+  <p>Этот проект не только интересен, но и полезен, так как позволяет мониторить и улучшать качество воздуха в помещениях. Реализуя такой проект, можно изучить различные аспекты электроники, программирования, работы с датчиками и обработки данных с использованием машинного обучения.</p>
+  
+  <div class="tip">
+    <span class="emoji">🚀</span><strong>Идея для развития:</strong> Добавьте интеграцию с умными розетками для автоматического включения очистителя воздуха при ухудшении показателей, или уведомления в Telegram при превышении пороговых значений!
+  </div>
+
+  <div class="related-posts">
+    <h3>Похожие записи</h3>
+    <ul>
+      <li><a href="#">BLE-пульт для умного робота с ESP32 и MIT App Inventor</a></li>
+      <li><a href="#">BLE-термостат для умного дома с ESP32 и MIT App Inventor</a></li>
+      <li><a href="#">Управление умной лампой через BLE с помощью ESP32 и MIT App Inventor</a></li>
+    </ul>
+  </div>
+
+</article>
+
+</body>
+</html>
