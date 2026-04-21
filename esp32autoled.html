@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Автоматическая система управления освещением</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      color: #24292e;
+      background: #fff;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+    h1 {
+      font-size: 2rem;
+      margin: 1.5rem 0 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid #eaecef;
+      color: #0366d6;
+    }
+    h2 {
+      font-size: 1.5rem;
+      margin: 1.8rem 0 0.8rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid #eaecef;
+      color: #24292e;
+    }
+    h3 {
+      font-size: 1.25rem;
+      margin: 1.2rem 0 0.6rem;
+      color: #24292e;
+    }
+    h4 {
+      font-size: 1.1rem;
+      margin: 1rem 0 0.5rem;
+      color: #24292e;
+    }
+    p { margin: 0.8rem 0; }
+    ul, ol {
+      margin: 0.8rem 0 0.8rem 1.5rem;
+      padding-left: 0.5rem;
+    }
+    li { margin: 0.3rem 0; }
+    a {
+      color: #0366d6;
+      text-decoration: none;
+    }
+    a:hover { text-decoration: underline; }
+    
+    /* Code blocks */
+    pre {
+      background: #f6f8fa;
+      border: 1px solid #e1e4e8;
+      border-radius: 6px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin: 1rem 0;
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      font-size: 0.85rem;
+      line-height: 1.4;
+    }
+    code {
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      background: #f6f8fa;
+      padding: 0.2em 0.4em;
+      border-radius: 3px;
+      font-size: 0.9em;
+    }
+    pre code {
+      background: transparent;
+      padding: 0;
+      font-size: inherit;
+    }
+    
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.95rem;
+    }
+    th, td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid #e1e4e8;
+      text-align: left;
+    }
+    th {
+      background: #f6f8fa;
+      font-weight: 600;
+    }
+    tr:nth-child(even) { background: #fbfcfc; }
+    
+    /* Callout boxes */
+    .note, .warning, .tip {
+      border-left: 4px solid;
+      padding: 0.8rem 1rem;
+      margin: 1rem 0;
+      background: #f1f8ff;
+      border-radius: 0 4px 4px 0;
+    }
+    .warning {
+      background: #fff8f8;
+      border-left-color: #cb2431;
+    }
+    .tip {
+      background: #f0fff4;
+      border-left-color: #28a745;
+    }
+    .note { border-left-color: #0366d6; }
+    
+    .emoji { margin-right: 0.3rem; }
+    
+    /* Component list */
+    .components {
+      background: #f6f8fa;
+      border: 1px solid #e1e4e8;
+      border-radius: 6px;
+      padding: 1rem 1.2rem;
+      margin: 1rem 0;
+    }
+    .components ul {
+      margin: 0;
+      padding-left: 1.2rem;
+    }
+    
+    /* Implementation steps */
+    .steps ol {
+      counter-reset: step;
+      list-style: none;
+      padding-left: 0;
+    }
+    .steps li {
+      position: relative;
+      padding-left: 2rem;
+      margin: 0.8rem 0;
+    }
+    .steps li::before {
+      content: counter(step);
+      counter-increment: step;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1.5rem;
+      height: 1.5rem;
+      background: #0366d6;
+      color: white;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 1.5rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    
+    /* Connection steps */
+    .connection-steps ol {
+      counter-reset: step;
+      list-style: none;
+      padding-left: 0;
+    }
+    .connection-steps li {
+      position: relative;
+      padding-left: 2rem;
+      margin: 0.5rem 0;
+    }
+    .connection-steps li::before {
+      content: counter(step);
+      counter-increment: step;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1.5rem;
+      height: 1.5rem;
+      background: #0366d6;
+      color: white;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 1.5rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    
+    /* Related posts */
+    .related-posts {
+      margin: 2rem 0;
+      padding: 1rem;
+      background: #f6f8fa;
+      border-radius: 6px;
+    }
+    .related-posts h3 {
+      margin-top: 0;
+      font-size: 1.1rem;
+    }
+    .related-posts ul {
+      margin: 0.5rem 0 0 1.5rem;
+    }
+    .related-posts li {
+      margin: 0.3rem 0;
+      list-style-type: none;
+    }
+    .related-posts li::before {
+      content: "•";
+      color: #0366d6;
+      font-weight: bold;
+      display: inline-block;
+      width: 1em;
+      margin-left: -1em;
+    }
+    
+    @media (max-width: 600px) {
+      body { padding: 1rem; }
+      h1 { font-size: 1.6rem; }
+      h2 { font-size: 1.3rem; }
+      pre { font-size: 0.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+<article>
+  <h1>Автоматическая система управления освещением</h1>
+  
+  <p>Система будет автоматически включать освещение при обнаружении движения в помещении и регулировать яркость света в зависимости от уровня естественного освещения. Также можно добавить возможность удаленного управления через мобильное приложение.</p>
+
+  <h2>Необходимые компоненты</h2>
+  
+  <div class="components">
+    <ul>
+      <li><strong>Микроконтроллер ESP32 или Arduino</strong> — встроенный Wi-Fi позволит легко интегрировать систему с облачными сервисами</li>
+      <li><strong>Датчик движения (PIR-сенсор)</strong> — для обнаружения движения в помещении</li>
+      <li><strong>Датчик освещенности</strong> (например, фотодатчик или TSL2561) — для измерения уровня освещенности</li>
+      <li><strong>Реле или MOSFET</strong> — для управления включением и выключением лампы</li>
+      <li><strong>Светодиодная лампа или любая другая лампа</strong> — для освещения</li>
+      <li><strong>Мобильное приложение или веб-интерфейс</strong> — для удаленного управления и мониторинга</li>
+    </ul>
+  </div>
+  
+  <div class="tip">
+    <span class="emoji">💡</span><strong>Совет:</strong> ESP32 предпочтительнее для этого проекта благодаря встроенному Wi-Fi/Bluetooth и большему количеству аналоговых входов по сравнению с Arduino Uno.
+  </div>
+
+  <h2>Шаги реализации</h2>
+  
+  <div class="steps">
+    <ol>
+      <li><strong>Сборка аппаратной части:</strong>
+        <ul style="margin-top: 0.3rem;">
+          <li>Подключите PIR-сенсор и датчик освещенности к микроконтроллеру</li>
+          <li>Подключите лампу через реле или MOSFET к микроконтроллеру для управления питанием лампы</li>
+          <li>Обеспечьте надёжное питание всех компонентов (особенно реле)</li>
+        </ul>
+      </li>
+      <li><strong>Программирование микроконтроллера:</strong>
+        <ul style="margin-top: 0.3rem;">
+          <li>Напишите код на Arduino IDE или MicroPython для считывания данных с датчиков</li>
+          <li>Реализуйте логику включения и выключения лампы на основе данных с датчиков движения и освещенности</li>
+          <li>Добавьте гистерезис для предотвращения частого переключения при пограничных значениях</li>
+        </ul>
+      </li>
+      <li><strong>Создание мобильного приложения или веб-интерфейса:</strong>
+        <ul style="margin-top: 0.3rem;">
+          <li>Используйте Blynk или аналогичные платформы для создания мобильного приложения, которое позволит удаленно управлять системой освещения</li>
+          <li>Настройте передачу данных от микроконтроллера к мобильному приложению через Wi-Fi</li>
+          <li>Добавьте виджеты для отображения состояния датчиков и ручного управления</li>
+        </ul>
+      </li>
+      <li><strong>Тестирование и настройка:</strong>
+        <ul style="margin-top: 0.3rem;">
+          <li>Тестируйте систему в различных условиях освещенности и активности, чтобы убедиться в корректной работе</li>
+          <li>Настройте чувствительность датчиков и пороговые значения для включения и выключения света</li>
+          <li>Проверьте работу системы при потере связи с приложением (автономный режим)</li>
+        </ul>
+      </li>
+    </ol>
+  </div>
+
+  <h2>Схема подключения к ESP32</h2>
+  
+  <div class="connection-steps">
+    <ol>
+      <li><strong>PIR-датчик движения:</strong>
+        <ul style="margin-top: 0.3rem;">
+          <li>VCC → 5V или 3.3V (зависит от модели)</li>
+          <li>GND → GND</li>
+          <li>OUT → GPIO 27 (цифровой вход)</li>
+        </ul>
+      </li>
+      <li><strong>Датчик освещенности TSL2561 (I2C):</strong>
+        <ul style="margin-top: 0.3rem;">
+          <li>VCC → 3.3V</li>
+          <li>GND → GND</li>
+          <li>SCL → GPIO 22</li>
+          <li>SDA → GPIO 21</li>
+        </ul>
+      </li>
+      <li><strong>Релейный модуль:</strong>
+        <ul style="margin-top: 0.3rem;">
+          <li>VCC → 5V</li>
+          <li>GND → GND</li>
+          <li>IN → GPIO 26 (управление реле)</li>
+        </ul>
+      </li>
+      <li><strong>Лампа:</strong>
+        <ul style="margin-top: 0.3rem;">
+          <li>Подключается через нормально разомкнутые контакты реле</li>
+          <li>⚠️ При работе с сетевым напряжением 220В соблюдайте технику безопасности!</li>
+        </ul>
+      </li>
+    </ol>
+  </div>
+  
+  <div class="warning">
+    <span class="emoji">⚠️</span><strong>Предупреждение:</strong> При подключении лампы к сети 220В через реле обязательно изолируйте высоковольтную часть и используйте корпус. Не работайте с подключённым сетевым напряжением без соответствующих навыков!
+  </div>
+
+  <h2>Пример кода для управления освещением</h2>
+  
+  <p>Код на Arduino IDE для ESP32 с использованием датчиков PIR, TSL2561 и платформы Blynk для удалённого управления:</p>
+  
+  <pre><code>#include &lt;WiFi.h&gt;
+#include &lt;BlynkSimpleEsp32.h&gt;
+#include &lt;Wire.h&gt;
+#include &lt;Adafruit_Sensor.h&gt;
+#include &lt;Adafruit_TSL2561_U.h&gt;
+
+// Инициализация датчика освещенности
+Adafruit_TSL2561_Unified tsl = Adafruit_TSL2561_Unified(TSL2561_ADDR_FLOAT, 12345);
+
+// Инициализация PIR-сенсора
+const int pirPin = 27; // Пин, к которому подключен PIR-сенсор
+const int relayPin = 26; // Пин, к которому подключено реле
+
+// Инициализация Blynk
+char auth[] = "YourAuthToken";
+char ssid[] = "YourNetworkName";
+char pass[] = "YourPassword";
+
+// Пороговые значения
+const float LIGHT_THRESHOLD = 50; // Люксы - порог включения света
+unsigned long lastMotionTime = 0;
+const unsigned long MOTION_TIMEOUT = 30000; // 30 секунд после последнего движения
+
+void setup() {
+  Serial.begin(115200);
+
+  pinMode(pirPin, INPUT);
+  pinMode(relayPin, OUTPUT);
+  digitalWrite(relayPin, LOW); // Свет выключен по умолчанию
+
+  Blynk.begin(auth, ssid, pass);
+
+  if (!tsl.begin()) {
+    Serial.print("No TSL2561 detected");
+    while (1);
+  }
+  tsl.enableAutoRange(true);
+  tsl.setIntegrationTime(TSL2561_INTEGRATIONTIME_13MS);
+}
+
+void loop() {
+  Blynk.run();
+
+  sensors_event_t event;
+  tsl.getEvent(&event);
+
+  int pirState = digitalRead(pirPin);
+  
+  // Логика управления освещением
+  if (pirState == HIGH) {
+    lastMotionTime = millis(); // Запоминаем время последнего движения
+  }
+  
+  // Включаем свет если: темно И (есть движение ИЛИ прошло меньше таймаута с последнего движения)
+  bool shouldTurnOn = (event.light &lt; LIGHT_THRESHOLD) &amp;&amp; 
+                      (pirState == HIGH || (millis() - lastMotionTime &lt; MOTION_TIMEOUT));
+  
+  digitalWrite(relayPin, shouldTurnOn ? HIGH : LOW);
+
+  // Отправка данных в Blynk для мониторинга
+  Blynk.virtualWrite(V1, event.light);    // Уровень освещенности
+  Blynk.virtualWrite(V2, pirState);       // Состояние PIR
+  Blynk.virtualWrite(V3, shouldTurnOn);   // Состояние реле
+
+  delay(1000);
+}</code></pre>
+
+  <div class="note">
+    <span class="emoji">ℹ️</span><strong>Примечание:</strong> Замените <code>YourAuthToken</code>, <code>YourNetworkName</code> и <code>YourPassword</code> на ваши реальные данные. Токен авторизации можно получить в приложении Blynk после создания нового проекта.
+  </div>
+
+  <h2>Настройка Blynk для удалённого управления</h2>
+  
+  <div class="steps">
+    <ol>
+      <li>Установите приложение Blynk на смартфон и создайте новый проект для ESP32</li>
+      <li>Добавьте виджеты:
+        <ul style="margin-top: 0.3rem;">
+          <li><strong>Value Display</strong> для отображения уровня освещенности (привязать к V1)</li>
+          <li><strong>Led</strong> для индикации обнаружения движения (привязать к V2)</li>
+          <li><strong>Button</strong> для ручного управления светом (привязать к V3)</li>
+        </ul>
+      </li>
+      <li>В коде добавьте обработчик для кнопки ручного управления:
+        <pre><code>BLYNK_WRITE(V3) {
+  int state = param.asInt();
+  digitalWrite(relayPin, state);
+}</code></pre>
+      </li>
+      <li>Загрузите код в ESP32 и запустите проект в приложении Blynk</li>
+    </ol>
+  </div>
+
+  <h2>Возможные проблемы и решения</h2>
+  
+  <ul>
+    <li><strong>PIR-датчик не обнаруживает движение:</strong>
+      <ul>
+        <li>Проверьте питание датчика (некоторые модели требуют 5В)</li>
+        <li>Отрегулируйте потенциометры чувствительности и времени задержки на датчике</li>
+        <li>Убедитесь, что датчик направлен в нужную зону и не закрыт препятствиями</li>
+      </ul>
+    </li>
+    <li><strong>Датчик TSL2561 не определяется:</strong>
+      <ul>
+        <li>Проверьте подключение SDA/SCL и наличие подтягивающих резисторов 4.7 кОм</li>
+        <li>Убедитесь, что адрес датчика совпадает с указанным в коде (TSL2561_ADDR_FLOAT, _LOW или _HIGH)</li>
+        <li>Проверьте, не заняты ли пины 21/22 другими устройствами</li>
+      </ul>
+    </li>
+    <li><strong>Реле щёлкает, но лампа не включается:</strong>
+      <ul>
+        <li>Проверьте подключение лампы к правильным контактам реле (NO — нормально разомкнутые)</li>
+        <li>Убедитесь, что лампа исправна и есть напряжение в сети</li>
+        <li>Проверьте, выдерживает ли реле ток вашей лампы (особенно для светодиодных с драйверами)</li>
+      </ul>
+    </li>
+    <li><strong>ESP32 теряет соединение с Blynk:</strong>
+      <ul>
+        <li>Добавьте переподключение при потере Wi-Fi в коде</li>
+        <li>Используйте WDT (Watchdog Timer) для автоматической перезагрузки при зависании</li>
+        <li>Проверьте стабильность питания (добавьте конденсатор 100–470 мкФ)</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h2>Идеи для расширения функционала</h2>
+  
+  <ul>
+    <li><strong>Плавное регулирование яркости:</strong> Замените реле на MOSFET и используйте ШИМ для диммирования светодиодной ленты</li>
+    <li><strong>Расписание работы:</strong> Добавьте библиотеку <code>time.h</code> для включения света только в определённые часы</li>
+    <li><strong>Интеграция с голосовыми помощниками:</strong> Используйте платформы типа IFTTT или Home Assistant для управления через Alexa/Google Home</li>
+    <li><strong>Энергостатистика:</strong> Добавьте модуль измерения тока (например, ACS712) для учёта потребления энергии</li>
+    <li><strong>Локальное управление:</strong> Добавьте кнопку для ручного включения/выключения без зависимости от Wi-Fi</li>
+  </ul>
+  
+  <div class="tip">
+    <span class="emoji">🚀</span><strong>Идея:</strong> Объедините эту систему с датчиком присутствия и календарём отпусков — свет будет включаться только когда вы дома, экономя электроэнергию!
+  </div>
+
+  <div class="related-posts">
+    <h3>Похожие записи</h3>
+    <ul>
+      <li><a href="#">BLE-пульт для умного робота с ESP32 и MIT App Inventor</a></li>
+      <li><a href="#">BLE-термостат для умного дома с ESP32 и MIT App Inventor</a></li>
+      <li><a href="#">Управление умной лампой через BLE с помощью ESP32 и MIT App Inventor</a></li>
+    </ul>
+  </div>
+
+</article>
+
+</body>
+</html>
