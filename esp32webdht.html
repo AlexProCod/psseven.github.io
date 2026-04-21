@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Веб-сервер температуры и влажности на ESP32 и DHT11/DHT22</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      color: #24292e;
+      background: #fff;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+    h1 {
+      font-size: 2rem;
+      margin: 1.5rem 0 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid #eaecef;
+      color: #0366d6;
+    }
+    h2 {
+      font-size: 1.5rem;
+      margin: 1.8rem 0 0.8rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid #eaecef;
+      color: #24292e;
+    }
+    h3 {
+      font-size: 1.25rem;
+      margin: 1.2rem 0 0.6rem;
+      color: #24292e;
+    }
+    p { margin: 0.8rem 0; }
+    ul, ol {
+      margin: 0.8rem 0 0.8rem 1.5rem;
+      padding-left: 0.5rem;
+    }
+    li { margin: 0.3rem 0; }
+    a {
+      color: #0366d6;
+      text-decoration: none;
+    }
+    a:hover { text-decoration: underline; }
+    
+    /* Code blocks */
+    pre {
+      background: #f6f8fa;
+      border: 1px solid #e1e4e8;
+      border-radius: 6px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin: 1rem 0;
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      font-size: 0.85rem;
+      line-height: 1.4;
+    }
+    code {
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      background: #f6f8fa;
+      padding: 0.2em 0.4em;
+      border-radius: 3px;
+      font-size: 0.9em;
+    }
+    pre code {
+      background: transparent;
+      padding: 0;
+      font-size: inherit;
+    }
+    
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.95rem;
+    }
+    th, td {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid #e1e4e8;
+      text-align: left;
+    }
+    th {
+      background: #f6f8fa;
+      font-weight: 600;
+    }
+    tr:nth-child(even) { background: #fbfcfc; }
+    
+    /* Callout boxes */
+    .note, .warning, .tip {
+      border-left: 4px solid;
+      padding: 0.8rem 1rem;
+      margin: 1rem 0;
+      background: #f1f8ff;
+      border-radius: 0 4px 4px 0;
+    }
+    .warning {
+      background: #fff8f8;
+      border-left-color: #cb2431;
+    }
+    .tip {
+      background: #f0fff4;
+      border-left-color: #28a745;
+    }
+    .note { border-left-color: #0366d6; }
+    
+    .emoji { margin-right: 0.3rem; }
+    
+    /* Component list */
+    .components {
+      background: #f6f8fa;
+      border: 1px solid #e1e4e8;
+      border-radius: 6px;
+      padding: 1rem 1.2rem;
+      margin: 1rem 0;
+    }
+    
+    /* Related posts */
+    .related-posts {
+      margin: 2rem 0;
+      padding: 1rem;
+      background: #f6f8fa;
+      border-radius: 6px;
+    }
+    .related-posts h3 {
+      margin-top: 0;
+      font-size: 1.1rem;
+    }
+    .related-posts ul {
+      margin: 0.5rem 0 0 1.5rem;
+    }
+    .related-posts li {
+      margin: 0.3rem 0;
+    }
+    
+    @media (max-width: 600px) {
+      body { padding: 1rem; }
+      h1 { font-size: 1.6rem; }
+      h2 { font-size: 1.3rem; }
+      pre { font-size: 0.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+<article>
+  <h1>Веб-сервер температуры и влажности на ESP32 и DHT11/DHT22</h1>
+  
+  <p>В этой статье вы узнаете, как создать асинхронный веб-сервер ESP32 с DHT11 или DHT22, который отображает температуру и влажность с помощью Arduino IDE.</p>
+  
+  <p>Веб-сервер, который мы создадим, будет обновлять показания автоматически, без необходимости обновления веб-страницы.</p>
+  
+  <p>Для создания веб-сервера мы будем использовать <strong>библиотеку ESPAsyncWebServer</strong>, которая обеспечивает простой способ создания асинхронного веб-сервера. Создание асинхронного веб-сервера имеет несколько преимуществ:</p>
+  
+  <ul>
+    <li>Обрабатывать более одного соединения одновременно</li>
+    <li>Когда вы отправляете ответ, вы немедленно готовы обрабатывать другие соединения, в то время как сервер занимается отправкой ответа в фоновом режиме</li>
+    <li>Простой механизм обработки шаблонов для работы с шаблонами</li>
+  </ul>
+  
+  <div class="tip">
+    <span class="emoji">💡</span><strong>Документация:</strong> Ознакомьтесь с документацией библиотеки на её <a href="https://github.com/me-no-dev/ESPAsyncWebServer">странице GitHub</a>.
+  </div>
+
+  <h2>Схема подключения</h2>
+  
+  <p>Прежде чем перейти к веб-серверу, необходимо подключить датчик DHT11 или DHT22 к ESP32. В этом случае мы подключаем контакт данных к <strong>GPIO 27</strong>, но вы можете подключить его к любому другому цифровому пину.</p>
+  
+  <div class="note">
+    <span class="emoji">ℹ️</span><strong>Примечание:</strong> Если вы используете модуль с датчиком DHT, он обычно поставляется только с тремя контактами. Контакты должны быть помечены, чтобы вы знали, как их подключать. Кроме того, многие из этих модулей уже поставляются с внутренним подтягивающим резистором, поэтому вам не нужно добавлять его в схему.
+  </div>
+
+  <h2>Необходимые библиотеки</h2>
+  
+  <div class="components">
+    <p>Для этого проекта вам необходимо установить следующие библиотеки:</p>
+    <ul>
+      <li><strong>DHT sensor library</strong> и <strong>Adafruit Unified Sensor Driver</strong> — для чтения данных с датчика DHT</li>
+      <li><strong>ESPAsyncWebServer</strong> и <strong>AsyncTCP</strong> — для создания асинхронного веб-сервера</li>
+    </ul>
+  </div>
+  
+  <div class="warning">
+    <span class="emoji">❗</span><strong>Важно:</strong> Мы будем программировать ESP32 с помощью Arduino IDE, поэтому перед продолжением убедитесь, что у вас установлено дополнение ESP32.
+  </div>
+
+  <h2>Код веб-сервера</h2>
+  
+  <p>Откройте Arduino IDE и скопируйте следующий код. Не забудьте заменить <code>REPLACE_WITH_YOUR_SSID</code> и <code>REPLACE_WITH_YOUR_PASSWORD</code> на данные вашей сети Wi-Fi.</p>
+  
+  <pre><code>#include "WiFi.h"
+#include "ESPAsyncWebServer.h"
+#include &lt;Adafruit_Sensor.h&gt;
+#include &lt;DHT.h&gt;
+
+// Укажите название и пароль для доступа к вашему wifi
+const char* ssid = "REPLACE_WITH_YOUR_SSID";
+const char* password = "REPLACE_WITH_YOUR_PASSWORD";
+
+#define DHTPIN 27     // Цифровой контакт, подключенный к датчику DHT
+
+// Раскомментируйте тип используемого датчика:
+//#define DHTTYPE    DHT11     // DHT 11
+#define DHTTYPE    DHT22     // DHT 22 (AM2302)
+//#define DHTTYPE    DHT21     // DHT 21 (AM2301)
+
+DHT dht(DHTPIN, DHTTYPE);
+
+// Создаем объект AsyncWebServer на порту 80
+AsyncWebServer server(80);
+
+String readDHTTemperature() {
+  // Считываем температуру в градусах Цельсия (по умолчанию)
+  float t = dht.readTemperature();
+  // Read temperature as Fahrenheit (isFahrenheit = true)
+  //float t = dht.readTemperature(true);
+  // Check if any reads failed and exit early (to try again).
+  if (isnan(t)) {
+    Serial.println("Failed to read from DHT sensor!");
+    return "--";
+  }
+  else {
+    Serial.println(t);
+    return String(t);
+  }
+}
+
+String readDHTHumidity() {
+  float h = dht.readHumidity();
+  if (isnan(h)) {
+    Serial.println("Failed to read from DHT sensor!");
+    return "--";
+  }
+  else {
+    Serial.println(h);
+    return String(h);
+  }
+}
+
+const char index_html[] PROGMEM = R"rawliteral(
+&lt;!DOCTYPE HTML&gt;&lt;html&gt;
+&lt;head&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;
+  &lt;link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous"&gt;
+  &lt;style&gt;
+    html {
+     font-family: Arial;
+     display: inline-block;
+     margin: 0px auto;
+     text-align: center;
+    }
+    h2 { font-size: 3.0rem; }
+    p { font-size: 3.0rem; }
+    .units { font-size: 1.2rem; }
+    .dht-labels{
+      font-size: 1.5rem;
+      vertical-align:middle;
+      padding-bottom: 15px;
+    }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h2&gt;ESP32 DHT Server&lt;/h2&gt;
+  &lt;p&gt;
+    &lt;i class="fas fa-thermometer-half" style="color:#059e8a;"&gt;&lt;/i&gt;
+    &lt;span class="dht-labels"&gt;Temperature&lt;/span&gt;
+    &lt;span id="temperature"&gt;%TEMPERATURE%&lt;/span&gt;
+    &lt;sup class="units"&gt;&amp;deg;C&lt;/sup&gt;
+  &lt;/p&gt;
+  &lt;p&gt;
+    &lt;i class="fas fa-tint" style="color:#00add6;"&gt;&lt;/i&gt;
+    &lt;span class="dht-labels"&gt;Humidity&lt;/span&gt;
+    &lt;span id="humidity"&gt;%HUMIDITY%&lt;/span&gt;
+    &lt;sup class="units"&gt;&amp;percnt;&lt;/sup&gt;
+  &lt;/p&gt;
+&lt;/body&gt;
+&lt;script&gt;
+setInterval(function ( ) {
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 &amp;&amp; this.status == 200) {
+      document.getElementById("temperature").innerHTML = this.responseText;
+    }
+  };
+  xhttp.open("GET", "/temperature", true);
+  xhttp.send();
+}, 10000 ) ;
+
+setInterval(function ( ) {
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 &amp;&amp; this.status == 200) {
+      document.getElementById("humidity").innerHTML = this.responseText;
+    }
+  };
+  xhttp.open("GET", "/humidity", true);
+  xhttp.send();
+}, 10000 ) ;
+&lt;/script&gt;
+&lt;/html&gt;)rawliteral";
+
+// Заменяем строку значениями DHT.
+String processor(const String& var){
+  //Serial.println(var);
+  if(var == "TEMPERATURE"){
+    return readDHTTemperature();
+  }
+  else if(var == "HUMIDITY"){
+    return readDHTHumidity();
+  }
+  return String();
+}
+
+void setup(){
+  // Последовательный порт для целей отладки
+  Serial.begin(115200);
+
+  dht.begin();
+
+  // Подключение к Wi-Fi
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.println("Connecting to WiFi..");
+  }
+
+  // Вывод ESP32 IP адрес
+  Serial.println(WiFi.localIP());
+
+  // Маршрут для корневой/веб-страницы
+  server.on("/", HTTP_GET, {
+    request-&gt;send_P(200, "text/html", index_html, processor);
+  });
+  server.on("/temperature", HTTP_GET, {
+    request-&gt;send_P(200, "text/plain", readDHTTemperature().c_str());
+  });
+  server.on("/humidity", HTTP_GET, {
+    request-&gt;send_P(200, "text/plain", readDHTHumidity().c_str());
+  });
+
+  // Start server
+  server.begin();
+}
+
+void loop(){
+
+}</code></pre>
+
+  <h2>Загрузка и тестирование</h2>
+  
+  <ol>
+    <li>Замените <code>ssid</code> и <code>password</code> на данные вашей сети Wi-Fi</li>
+    <li>Раскомментируйте нужный тип датчика: <code>DHT11</code>, <code>DHT22</code> или <code>DHT21</code></li>
+    <li>Выберите плату: <strong>Инструменты → Плата → ESP32 Dev Module</strong></li>
+    <li>Выберите порт и загрузите скетч на ESP32</li>
+    <li>Откройте монитор последовательного порта (115200 бод) и дождитесь появления IP-адреса</li>
+    <li>Введите этот IP-адрес в браузере — вы увидите страницу с температурой и влажностью</li>
+    <li>Показания будут автоматически обновляться каждые 10 секунд без перезагрузки страницы</li>
+  </ol>
+  
+  <div class="tip">
+    <span class="emoji">🔧</span><strong>Совет:</strong> Если датчик не читает данные:
+    <ul style="margin-top: 0.5rem;">
+      <li>Проверьте подключение контакта DATA к правильному GPIO</li>
+      <li>Убедитесь, что выбран правильный тип датчика в коде</li>
+      <li>Добавьте подтягивающий резистор 10 кОм между DATA и VCC, если модуль его не имеет</li>
+      <li>Проверьте питание датчика (3.3В или 5В в зависимости от модели)</li>
+    </ul>
+  </div>
+
+  <h2>Возможные проблемы и решения</h2>
+  
+  <ul>
+    <li><strong>Показания "--" или не обновляются:</strong>
+      <ul>
+        <li>Проверьте надёжность подключения проводов к датчику</li>
+        <li>Убедитесь, что датчик не находится рядом с источниками тепла</li>
+        <li>Добавьте задержку 2 секунды между чтениями датчика (требование DHT)</li>
+      </ul>
+    </li>
+    <li><strong>Веб-страница не загружается:</strong>
+      <ul>
+        <li>Убедитесь, что устройство подключено к той же сети 2.4 ГГц</li>
+        <li>Проверьте корректность ввода пароля (чувствительно к регистру)</li>
+        <li>Попробуйте ввести IP-адрес вручную, а не через поиск</li>
+      </ul>
+    </li>
+    <li><strong>ESP32 перезагружается:</strong>
+      <ul>
+        <li>Добавьте конденсатор 10–100 мкФ между 3.3В и GND рядом с платой</li>
+        <li>Используйте стабильный источник питания 5В/2А</li>
+        <li>Проверьте, не перегружен ли вывод питания 3.3В</li>
+      </ul>
+    </li>
+  </ul>
+
+</article>
+
+</body>
+</html>
